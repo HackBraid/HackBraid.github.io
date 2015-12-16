@@ -24,7 +24,7 @@
 
 
 
-  <meta name="keywords" content="JAVA,多线程,生产者消费者," />
+  <meta name="keywords" content="JAVA,SVN,多线程," />
 
 
 
@@ -49,7 +49,7 @@
 
 
 
-  <title> Java基于queue的多线程模拟生产者消费者问题 // Braid's Blog </title>
+  <title> Java基于queue的多线程提取SVN信息泄露程序 // Braid's Blog </title>
 </head>
 
 <body>
@@ -160,7 +160,7 @@
           
           
             
-              Java基于queue的多线程模拟生产者消费者问题
+              Java基于queue的多线程提取SVN信息泄露程序
             
           
         </h1>
@@ -168,7 +168,7 @@
 
       <div class="post-meta">
         <span class="post-time">
-          发表于 2015-09-23
+          发表于 2015-12-16
         </span>
 
         
@@ -188,8 +188,8 @@
           
             <span class="post-comments-count">
             &nbsp; | &nbsp;
-            <a href="/2015/09/23/producerconsumer/#comments" >
-              <span class="post-comments-count ds-thread-count" data-thread-key="2015/09/23/producerconsumer/"></span>
+            <a href="/2015/12/16/svnExtract/#comments" >
+              <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/16/svnExtract/"></span>
             </a>
           </span>
           
@@ -203,95 +203,139 @@
       
 
       
-        <h2 id="0x00_并发协作（生产者消费者模型）">0x00 并发协作（生产者消费者模型）</h2><p>对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。<br>生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。<br>这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG" alt=""><br><a id="more"></a></p>
-<h2 id="0x01_基于Queue的生产者消费者模型实现">0x01 基于Queue的生产者消费者模型实现</h2><pre><code>package com.thread;
-
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+        <h2 id="0x00_背景">0x00 背景</h2><p>引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/svn.png" alt=""><br><a id="more"></a></p>
+<h2 id="0x01_基于Queue的多线程提取SVN信息泄露的实现">0x01 基于Queue的多线程提取SVN信息泄露的实现</h2><pre><code><span class="keyword">import</span> java.io.BufferedReader;
+<span class="keyword">import</span> java.io.IOException;
+<span class="keyword">import</span> java.io.InputStream;
+<span class="keyword">import</span> java.io.InputStreamReader;
+<span class="keyword">import</span> java.net.HttpURLConnection;
+<span class="keyword">import</span> java.net.URL;
+<span class="keyword">import</span> java.net.URLConnection;
+<span class="keyword">import</span> java.util.ArrayList;
+<span class="keyword">import</span> java.util.List;
+<span class="keyword">import</span> java.util.concurrent.BlockingQueue;
+<span class="keyword">import</span> java.util.concurrent.LinkedBlockingQueue;
+<span class="keyword">import</span> ReadFiles.ReadFromFile;
+<span class="keyword">import</span> WriteFiles.WriteToFile;
 
 <span class="comment">/**
- * java基于queue多线程来模拟生产者消费者问题
  * 
- * ProducerConsumer是主类，Producer生产者，Consumer消费者，Queue是商品
- * 
- * @author braid
- * @time 2015-09-23
+ * ClassName: svnExtract 
+ * <span class="doctag">@Description</span> 获取域名list中存在svn信息泄露的域名
+ * <span class="doctag">@author</span> HackBraid
+ * <span class="doctag">@date</span> 2015年11月4日
  */</span>
-<span class="keyword">public</span> <span class="keyword">class</span> ProducerConsumer {
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    ProducerConsumer pc = <span class="keyword">new</span> ProducerConsumer();
-    BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;(<span class="number">5</span>);
-    ExecutorService service = Executors.newCachedThreadPool();
-    Producer p = pc.new Producer(<span class="string">"王一"</span>, <span class="built_in">queue</span>);
-    Consumer c = pc.new Consumer(<span class="string">"李二"</span>, <span class="built_in">queue</span>);
-    service.submit(p);
-    service.submit(c);
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnExtract</span> {</span>
+
+<span class="keyword">public</span> <span class="keyword">static</span> BlockingQueue&lt;String&gt; svnQueue = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;();
+<span class="keyword">public</span> <span class="keyword">static</span> <span class="typename">void</span> main(String[] args) {
+    <span class="comment">// TODO Auto-generated method stub</span>
+    svnExtract svnExtract=<span class="keyword">new</span> svnExtract();
+    <span class="typename">long</span> startTime=System.currentTimeMillis(); 
+    svnExtract.svnProducer(svnQueue, <span class="string">"C:/Users/Administrator/Desktop/domain.txt"</span>);
+    <span class="typename">long</span> nextTime=System.currentTimeMillis(); 
+    System.out.println(<span class="string">"生成svnQueue队列的运行时间： "</span>+(nextTime-startTime)+<span class="string">"ms"</span>);
+    ThreadGroup tg=<span class="keyword">new</span> ThreadGroup(<span class="string">"svnExtract"</span>);
+    svnConsumer svnConsumer=svnExtract.<span class="keyword">new</span> svnConsumer();
+    <span class="keyword">for</span> (<span class="typename">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) {
+        Thread thread=<span class="keyword">new</span> Thread(tg,svnConsumer);
+        thread.start();
+    }
+    <span class="keyword">while</span> (<span class="literal">true</span>) {
+        <span class="keyword">if</span>(tg.activeCount()==<span class="number">0</span>){
+            <span class="keyword">break</span>;
+        }
+    }
+    <span class="typename">long</span> endTime=System.currentTimeMillis(); 
+    System.out.println(<span class="string">"程序总运行时间： "</span>+(endTime-startTime)+<span class="string">"ms"</span>);
 }
 
 <span class="comment">/**
- * 消费者
  * 
- * @author braid
- * @time 2015-09-23
+ * <span class="doctag">@Description</span> 根据文件路径将文件里的url填充到svnQueue中
+ * <span class="doctag">@param</span> svnQueue
+ * <span class="doctag">@param</span> filePath
+ * <span class="doctag">@return</span> svnQueue 
+ * <span class="doctag">@author</span> HackBraid
+ * <span class="doctag">@date</span> 2015年11月4日
  */</span>
-<span class="keyword">class</span> Consumer extends Thread {
-    <span class="keyword">private</span> String name;
-    <span class="keyword">private</span> BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = null;
-
-    <span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(String name, BlockingQueue&lt;String&gt; <span class="built_in">queue</span>)</span> </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.<span class="built_in">queue</span> = <span class="built_in">queue</span>;
+<span class="keyword">private</span> BlockingQueue&lt;String&gt; svnProducer(BlockingQueue&lt;String&gt; svnQueue, String filePath) {
+    String urlTmp;
+    ReadFromFile readFromFile = <span class="keyword">new</span> ReadFromFile();
+    List urlList = <span class="keyword">new</span> ArrayList&lt;String&gt;();
+    urlList = readFromFile.readFileByLines(filePath);
+    <span class="keyword">for</span> (<span class="typename">int</span> i = <span class="number">0</span>; i &lt; urlList.size(); i++) {
+        urlTmp=<span class="string">"http://"</span>+urlList.get(i)+<span class="string">"/.svn/entries"</span>;
+        svnQueue.offer(urlTmp);
     }
+    <span class="keyword">return</span> svnQueue;
 
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        <span class="keyword">while</span> (<span class="literal">true</span>) {
-            <span class="keyword">if</span> (<span class="built_in">queue</span>.isEmpty())
-                <span class="keyword">break</span>;
-            String product;
-            <span class="keyword">try</span> {
-                product = <span class="built_in">queue</span>.take();
-                System.out.println(name + <span class="string">"消费商品："</span> + product);
-                Thread.sleep(<span class="number">500</span>);
-            } <span class="keyword">catch</span> (InterruptedException e) {
-                <span class="comment">// TODO Auto-generated catch block</span>
-                e.printStackTrace();
-            }
-
-        }
-    }
 }
 
 <span class="comment">/**
- * 生产者
  * 
- * @author braid
- * @time 2015-09-23
+ * ClassName: svnConsumer 
+ * <span class="doctag">@Description</span> 处理svnQueue中的url，判断是否存在svn信息泄露
+ * <span class="doctag">@author</span> HackBraid
+ * <span class="doctag">@date</span> 2015年11月4日
  */</span>
-<span class="keyword">class</span> Producer extends Thread {
-    <span class="keyword">private</span> String name;
-    <span class="keyword">private</span> BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = null;
+<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnConsumer</span> <span class="keyword">implements</span> <span class="title">Runnable</span>{</span>
 
-    <span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(String name, BlockingQueue&lt;String&gt; <span class="built_in">queue</span>)</span> </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.<span class="built_in">queue</span> = <span class="built_in">queue</span>;
-    }
-
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        <span class="comment">//while(true)会造成阻塞，应该根据实际需要设定条件</span>
+    <span class="annotation">@Override</span>
+    <span class="keyword">public</span> <span class="typename">void</span> run() {
         <span class="keyword">while</span> (<span class="literal">true</span>) {
-            String product = <span class="string">"product"</span> + (<span class="keyword">int</span>)(Math.random()*<span class="number">10000</span>);
-            <span class="keyword">try</span> {
-                <span class="built_in">queue</span>.put(product);
-                System.out.println(name + <span class="string">"已生产："</span> + product);
-                Thread.sleep(<span class="number">500</span>);
-            } <span class="keyword">catch</span> (InterruptedException e) {
-                <span class="comment">// TODO Auto-generated catch block</span>
-                e.printStackTrace();
+            String url=svnQueue.poll();
+            <span class="keyword">if</span>(url == <span class="literal">null</span>){
+                <span class="keyword">return</span>;
             }
+            <span class="keyword">try</span>{
+            URL u = <span class="keyword">new</span> URL(url);
+            URLConnection connection = u.openConnection();
+            HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
+            httpURLConnection.setRequestProperty(<span class="string">"Accept-Charset"</span>, <span class="string">"utf-8"</span>);
+            httpURLConnection.setRequestProperty(<span class="string">"Accept-Encoding"</span>, <span class="string">"identity"</span>);
+            httpURLConnection.setRequestProperty(<span class="string">"Content-Type"</span>,
+                    <span class="string">"application/x-www-form-urlencoded"</span>);
+            httpURLConnection.setReadTimeout(<span class="number">2000</span>);
+            httpURLConnection.setConnectTimeout(<span class="number">2000</span>);
+            <span class="keyword">if</span> (((httpURLConnection.getResponseCode() == <span class="number">200</span>)||(httpURLConnection.getResponseCode() == <span class="number">403</span>)||(httpURLConnection.getResponseCode() == <span class="number">404</span>))) {
+                <span class="comment">//获取返回内容    </span>
+                InputStream <span class="keyword">in</span> = <span class="literal">null</span>;
+                InputStreamReader inr = <span class="literal">null</span>;
+                BufferedReader reader = <span class="literal">null</span>;
+                StringBuffer resultBuffer = <span class="keyword">new</span> StringBuffer();
+                String tempLine = <span class="literal">null</span>;
+                 <span class="keyword">try</span>{
+                 <span class="keyword">in</span> = httpURLConnection.getInputStream();
+                 <span class="comment">//先对数据流进行utf-8转码，解决乱码</span>
+                 inr = <span class="keyword">new</span> InputStreamReader(<span class="keyword">in</span>,<span class="string">"utf-8"</span>);
+                 reader = <span class="keyword">new</span> BufferedReader(inr);
+                 <span class="keyword">while</span>((tempLine = reader.readLine())!=<span class="literal">null</span>){
+                     <span class="keyword">if</span>(tempLine.indexOf(<span class="string">"ir"</span>)&gt;<span class="number">0</span>&amp;&amp;tempLine.length()&lt;<span class="number">5</span>){
+                         WriteToFile.fWriter(<span class="string">"C:/Users/Administrator/Desktop/svnSuccess.txt"</span>, url);
+                         <span class="keyword">break</span>;
+                     }
+                 }
+                 }<span class="keyword">finally</span>{
+                 <span class="keyword">if</span>(reader!=<span class="literal">null</span>){
+                 reader.close();
+                 }
+                 <span class="keyword">if</span>(inr!=<span class="literal">null</span>){
+                 inr.close();
+                 }
+                 <span class="keyword">if</span>(<span class="keyword">in</span>!=<span class="literal">null</span>){
+                 <span class="keyword">in</span>.close();
+                 }
+                 }
+            }
+            <span class="keyword">else</span>{
+            }
+        } <span class="keyword">catch</span> (IOException e) {
+        }
+
         }
     }
+
 }
 }
 </code></pre><p>本文由HackBraid整理总结，如需转载请注明出处。</p>
@@ -305,9 +349,9 @@ import java.util.concurrent.LinkedBlockingQueue;
           
             <a href="/tags/JAVA/"> #JAVA </a>
           
-            <a href="/tags/多线程/"> #多线程 </a>
+            <a href="/tags/SVN/"> #SVN </a>
           
-            <a href="/tags/生产者消费者/"> #生产者消费者 </a>
+            <a href="/tags/多线程/"> #多线程 </a>
           
         </div>
       
@@ -316,13 +360,11 @@ import java.util.concurrent.LinkedBlockingQueue;
         <div class="post-nav">
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2015/12/16/svnExtract/">Java基于queue的多线程提取SVN信息泄露程序</a>
-            
           </div>
 
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/07/09/fckeditor/">FCKeditor上传漏洞总结</a>
+              <a href="/2015/09/23/producerconsumer/">Java基于queue的多线程模拟生产者消费者问题</a>
             
           </div>
         </div>
@@ -342,8 +384,8 @@ import java.util.concurrent.LinkedBlockingQueue;
     
       <div class="comments" id="comments">
         
-          <div class="ds-thread" data-thread-key="2015/09/23/producerconsumer/"
-               data-title="Java基于queue的多线程模拟生产者消费者问题" data-url="http://hackbraid.github.io/2015/09/23/producerconsumer/">
+          <div class="ds-thread" data-thread-key="2015/12/16/svnExtract/"
+               data-title="Java基于queue的多线程提取SVN信息泄露程序" data-url="http://hackbraid.github.io/2015/12/16/svnExtract/">
           </div>
         
       </div>
@@ -458,7 +500,7 @@ import java.util.concurrent.LinkedBlockingQueue;
           <div class="post-toc">
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00_并发协作（生产者消费者模型）"><span class="nav-number">1.</span> <span class="nav-text">0x00 并发协作（生产者消费者模型）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_基于Queue的生产者消费者模型实现"><span class="nav-number">2.</span> <span class="nav-text">0x01 基于Queue的生产者消费者模型实现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00_背景"><span class="nav-number">1.</span> <span class="nav-text">0x00 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_基于Queue的多线程提取SVN信息泄露的实现"><span class="nav-number">2.</span> <span class="nav-text">0x01 基于Queue的多线程提取SVN信息泄露的实现</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator"></div>
