@@ -209,8 +209,66 @@
 <pre><code><span class="php"><span class="preprocessor">&lt;?php</span>
 <span class="keyword">include</span>(<span class="string">'includes/nav.inc.php'</span>);
 <span class="preprocessor">?&gt;</span></span>
-</code></pre><p>2.跟进nav.inc.php文件，发现该文件是select的核心页面<br>    <script>alert(document.cookie)</script></p>
-<h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>这里写POC证明<br>本文由HackBraid整理总结，如需转载请联系作者。</p>
+</code></pre><p>2.跟进nav.inc.php文件，发现该文件是select的核心页面以及输入处理程序：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol2.png" alt=""><br>表单处理程序比较简单，主要是根据你表单的选择作出相应的过滤和处理，如下</p>
+<pre><code><span class="php"><span class="preprocessor">&lt;?php</span>
+<span class="variable">$_REQUEST</span> = array_merge(<span class="variable">$_GET</span>, <span class="variable">$_POST</span>, <span class="variable">$_COOKIE</span>);
+
+<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">'submit'</span>])){ <span class="comment">//Injection time!    </span>
+
+<span class="keyword">switch</span>(<span class="variable">$_REQUEST</span>[<span class="string">'sanitize_quotes'</span>]){ <span class="comment">//Apply the requested level of quote sanitization</span>
+
+    <span class="keyword">case</span> <span class="string">'quotes_double'</span>:
+        <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="string">'\''</span>, <span class="string">'\'\''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">'quotes_escape'</span>:
+        <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="string">'\''</span>, <span class="string">'\\\''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
+        <span class="keyword">break</span>;
+    <span class="keyword">case</span> <span class="string">'quotes_remove'</span>:
+        <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="string">'\''</span>, <span class="string">''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
+        <span class="keyword">break</span>;
+
+}
+
+<span class="comment">//Remove spaces if requested</span>
+<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">'spaces_remove'</span>]) <span class="keyword">and</span> <span class="variable">$_REQUEST</span>[<span class="string">'spaces_remove'</span>] == <span class="string">'on'</span>) <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="string">' '</span>, <span class="string">''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
+
+<span class="comment">//Parse blacklist</span>
+<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">'blacklist_keywords'</span>])){
+    <span class="variable">$blacklist</span> = explode(<span class="string">','</span> , <span class="variable">$_REQUEST</span>[<span class="string">'blacklist_keywords'</span>]);
+}
+
+<span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">'blacklist_level'</span>])){
+    <span class="keyword">switch</span>(<span class="variable">$_REQUEST</span>[<span class="string">'blacklist_level'</span>]){
+        <span class="comment">//We process blacklists differently at each level. At the lowest, each keyword is removed case-sensitively.</span>
+        <span class="comment">//At medium blacklisting, checks are done case-insensitively.</span>
+        <span class="comment">//At the highest level, checks are done case-insensitively and repeatedly.</span>
+
+        <span class="keyword">case</span> <span class="string">'low'</span>:
+            <span class="keyword">foreach</span>(<span class="variable">$blacklist</span> <span class="keyword">as</span> <span class="variable">$keyword</span>){
+                <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="variable">$keyword</span>, <span class="string">''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
+            }
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> <span class="string">'medium'</span>:
+            <span class="keyword">foreach</span>(<span class="variable">$blacklist</span> <span class="keyword">as</span> <span class="variable">$keyword</span>){
+                <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(strtolower(<span class="variable">$keyword</span>), <span class="string">''</span>, strtolower(<span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]));
+            }
+            <span class="keyword">break</span>;
+        <span class="keyword">case</span> <span class="string">'high'</span>:
+            <span class="keyword">do</span>{
+                <span class="variable">$keyword_found</span> = <span class="number">0</span>;
+                <span class="keyword">foreach</span>(<span class="variable">$blacklist</span> <span class="keyword">as</span> <span class="variable">$keyword</span>){
+                    <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(strtolower(<span class="variable">$keyword</span>), <span class="string">''</span>, strtolower(<span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]), <span class="variable">$count</span>);
+                    <span class="variable">$keyword_found</span> += <span class="variable">$count</span>;
+                }    
+            }<span class="keyword">while</span> (<span class="variable">$keyword_found</span>);
+            <span class="keyword">break</span>;
+
+    }
+}
+}
+
+<span class="preprocessor">?&gt;</span></span>
+</code></pre><h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>这里写POC证明<br>本文由HackBraid整理总结，如需转载请联系作者。</p>
 
       
     </div>
