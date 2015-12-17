@@ -203,13 +203,13 @@
       
 
       
-        <h2 id="0x00_背景">0x00 背景</h2><p>首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql.png" alt=""><br><a id="more"></a></p>
-<h2 id="0x01_环境搭建">0x01 环境搭建</h2><p>PHP+MySql的集成环境特别多，像PhpStudy、Wamp和Lamp等下一步下一步点下去就成功安装了，网上搜索一下很多就不赘述。<br>这里提的环境是SQLol，它是一个可配置的SQL注入测试平台，包含了简单的SQL注入测试环境，即SQL语句的四元素增（Insert）、删（Delete）、改（Update）和查（Select）。<br>源码我打包了一份：<a href="http://pan.baidu.com/s/1nu2vaOT" title="Sqlol.zip" target="_blank" rel="external">http://pan.baidu.com/s/1nu2vaOT</a><br>解压到www的sql目录下，直接打开<a href="http://localhost/sql即可看到如下界面：" target="_blank" rel="external">http://localhost/sql即可看到如下界面：</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql1.png" alt=""></p>
-<h2 id="0x02_漏洞分析">0x02 漏洞分析</h2><p>这里写审计过程<br>首先看下源码结构，比较简单，只有一个include文件夹包含一些数据库配置文件：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol0.png" alt=""><br>直接看select.php文件：<br>1.开始引入了/include/nav.inc.php</p>
+        <h2 id="0x01_背景">0x01 背景</h2><p>首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql.png" alt=""><br><a id="more"></a></p>
+<h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>PHP+MySql的集成环境特别多，像PhpStudy、Wamp和Lamp等下一步下一步点下去就成功安装了，网上搜索一下很多就不赘述。<br>这里提的环境是SQLol，它是一个可配置的SQL注入测试平台，包含了简单的SQL注入测试环境，即SQL语句的四元素增（Insert）、删（Delete）、改（Update）和查（Select）。<br>①源码我打包了一份：<a href="http://pan.baidu.com/s/1nu2vaOT" title="Sqlol.zip" target="_blank" rel="external">http://pan.baidu.com/s/1nu2vaOT</a><br>②解压到www的sql目录下，直接打开<a href="http://localhost/sql即可看到如下界面：" target="_blank" rel="external">http://localhost/sql即可看到如下界面：</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql1.png" alt=""></p>
+<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>这里写审计过程<br>首先看下源码结构，比较简单，只有一个include文件夹包含一些数据库配置文件：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol0.png" alt=""><br>直接看select.php文件：<br>1.开始引入了/include/nav.inc.php</p>
 <pre><code><span class="php"><span class="preprocessor">&lt;?php</span>
 <span class="keyword">include</span>(<span class="string">'includes/nav.inc.php'</span>);
 <span class="preprocessor">?&gt;</span></span>
-</code></pre><h2 id="0x03_漏洞证明">0x03 漏洞证明</h2><p>这里写POC证明<br>本文由HackBraid整理总结，如需转载请联系作者。</p>
+</code></pre><h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>这里写POC证明<br>本文由HackBraid整理总结，如需转载请联系作者。</p>
 
       
     </div>
@@ -371,7 +371,7 @@
           <div class="post-toc">
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00_背景"><span class="nav-number">1.</span> <span class="nav-text">0x00 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_环境搭建"><span class="nav-number">2.</span> <span class="nav-text">0x01 环境搭建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_漏洞分析"><span class="nav-number">3.</span> <span class="nav-text">0x02 漏洞分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_漏洞证明"><span class="nav-number">4.</span> <span class="nav-text">0x03 漏洞证明</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_背景"><span class="nav-number">1.</span> <span class="nav-text">0x01 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_环境搭建"><span class="nav-number">2.</span> <span class="nav-text">0x02 环境搭建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_漏洞分析"><span class="nav-number">3.</span> <span class="nav-text">0x03 漏洞分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04_漏洞证明"><span class="nav-number">4.</span> <span class="nav-text">0x04 漏洞证明</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator"></div>
