@@ -24,7 +24,7 @@
 
 
 
-  <meta name="keywords" content="JAVA,SVN,多线程," />
+  <meta name="keywords" content="PHP,SQL注入,代码审计," />
 
 
 
@@ -49,7 +49,7 @@
 
 
 
-  <title> Java基于queue的多线程提取SVN信息泄露程序 // Braid's Blog </title>
+  <title> 【PHP代码审计实例教程】 那些年我们一起学SQL - 1.什么都没过滤的入门情况 // Braid's Blog </title>
 </head>
 
 <body>
@@ -160,7 +160,7 @@
           
           
             
-              Java基于queue的多线程提取SVN信息泄露程序
+              【PHP代码审计实例教程】 那些年我们一起学SQL - 1.什么都没过滤的入门情况
             
           
         </h1>
@@ -168,14 +168,14 @@
 
       <div class="post-meta">
         <span class="post-time">
-          发表于 2015-12-16
+          发表于 2015-12-17
         </span>
 
         
           <span class="post-category">
             &nbsp; | &nbsp; 分类于
             
-              <a href="/categories/编程开发/">编程开发</a>
+              <a href="/categories/WEB安全/">WEB安全</a>
 
               
               
@@ -188,8 +188,8 @@
           
             <span class="post-comments-count">
             &nbsp; | &nbsp;
-            <a href="/2015/12/16/svnExtract/#comments" >
-              <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/16/svnExtract/"></span>
+            <a href="/2015/12/17/sql0/#comments" >
+              <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/17/sql0/"></span>
             </a>
           </span>
           
@@ -203,142 +203,13 @@
       
 
       
-        <h2 id="0x00_背景">0x00 背景</h2><p>引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/svn.png" alt=""><br><a id="more"></a></p>
-<h2 id="0x01_基于Queue的多线程提取SVN信息泄露的实现">0x01 基于Queue的多线程提取SVN信息泄露的实现</h2><pre><code><span class="keyword">import</span> java.io.BufferedReader;
-<span class="keyword">import</span> java.io.IOException;
-<span class="keyword">import</span> java.io.InputStream;
-<span class="keyword">import</span> java.io.InputStreamReader;
-<span class="keyword">import</span> java.net.HttpURLConnection;
-<span class="keyword">import</span> java.net.URL;
-<span class="keyword">import</span> java.net.URLConnection;
-<span class="keyword">import</span> java.util.ArrayList;
-<span class="keyword">import</span> java.util.List;
-<span class="keyword">import</span> java.util.concurrent.BlockingQueue;
-<span class="keyword">import</span> java.util.concurrent.LinkedBlockingQueue;
-<span class="keyword">import</span> ReadFiles.ReadFromFile;
-<span class="keyword">import</span> WriteFiles.WriteToFile;
-
-<span class="comment">/**
- * 
- * ClassName: svnExtract 
- * <span class="doctag">@Description</span> 获取域名list中存在svn信息泄露的域名
- * <span class="doctag">@author</span> HackBraid
- * <span class="doctag">@date</span> 2015年11月4日
- */</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnExtract</span> {</span>
-
-<span class="keyword">public</span> <span class="keyword">static</span> BlockingQueue&lt;String&gt; svnQueue = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;();
-<span class="keyword">public</span> <span class="keyword">static</span> <span class="typename">void</span> main(String[] args) {
-    <span class="comment">// TODO Auto-generated method stub</span>
-    svnExtract svnExtract=<span class="keyword">new</span> svnExtract();
-    <span class="typename">long</span> startTime=System.currentTimeMillis(); 
-    svnExtract.svnProducer(svnQueue, <span class="string">"C:/Users/Administrator/Desktop/domain.txt"</span>);
-    <span class="typename">long</span> nextTime=System.currentTimeMillis(); 
-    System.out.println(<span class="string">"生成svnQueue队列的运行时间： "</span>+(nextTime-startTime)+<span class="string">"ms"</span>);
-    ThreadGroup tg=<span class="keyword">new</span> ThreadGroup(<span class="string">"svnExtract"</span>);
-    svnConsumer svnConsumer=svnExtract.<span class="keyword">new</span> svnConsumer();
-    <span class="keyword">for</span> (<span class="typename">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) {
-        Thread thread=<span class="keyword">new</span> Thread(tg,svnConsumer);
-        thread.start();
-    }
-    <span class="keyword">while</span> (<span class="literal">true</span>) {
-        <span class="keyword">if</span>(tg.activeCount()==<span class="number">0</span>){
-            <span class="keyword">break</span>;
-        }
-    }
-    <span class="typename">long</span> endTime=System.currentTimeMillis(); 
-    System.out.println(<span class="string">"程序总运行时间： "</span>+(endTime-startTime)+<span class="string">"ms"</span>);
-}
-
-<span class="comment">/**
- * 
- * <span class="doctag">@Description</span> 根据文件路径将文件里的url填充到svnQueue中
- * <span class="doctag">@param</span> svnQueue
- * <span class="doctag">@param</span> filePath
- * <span class="doctag">@return</span> svnQueue 
- * <span class="doctag">@author</span> HackBraid
- * <span class="doctag">@date</span> 2015年11月4日
- */</span>
-<span class="keyword">private</span> BlockingQueue&lt;String&gt; svnProducer(BlockingQueue&lt;String&gt; svnQueue, String filePath) {
-    String urlTmp;
-    ReadFromFile readFromFile = <span class="keyword">new</span> ReadFromFile();
-    List urlList = <span class="keyword">new</span> ArrayList&lt;String&gt;();
-    urlList = readFromFile.readFileByLines(filePath);
-    <span class="keyword">for</span> (<span class="typename">int</span> i = <span class="number">0</span>; i &lt; urlList.size(); i++) {
-        urlTmp=<span class="string">"http://"</span>+urlList.get(i)+<span class="string">"/.svn/entries"</span>;
-        svnQueue.offer(urlTmp);
-    }
-    <span class="keyword">return</span> svnQueue;
-
-}
-
-<span class="comment">/**
- * 
- * ClassName: svnConsumer 
- * <span class="doctag">@Description</span> 处理svnQueue中的url，判断是否存在svn信息泄露
- * <span class="doctag">@author</span> HackBraid
- * <span class="doctag">@date</span> 2015年11月4日
- */</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnConsumer</span> <span class="keyword">implements</span> <span class="title">Runnable</span>{</span>
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="typename">void</span> run() {
-        <span class="keyword">while</span> (<span class="literal">true</span>) {
-            String url=svnQueue.poll();
-            <span class="keyword">if</span>(url == <span class="literal">null</span>){
-                <span class="keyword">return</span>;
-            }
-            <span class="keyword">try</span>{
-            URL u = <span class="keyword">new</span> URL(url);
-            URLConnection connection = u.openConnection();
-            HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
-            httpURLConnection.setRequestProperty(<span class="string">"Accept-Charset"</span>, <span class="string">"utf-8"</span>);
-            httpURLConnection.setRequestProperty(<span class="string">"Accept-Encoding"</span>, <span class="string">"identity"</span>);
-            httpURLConnection.setRequestProperty(<span class="string">"Content-Type"</span>,
-                    <span class="string">"application/x-www-form-urlencoded"</span>);
-            httpURLConnection.setReadTimeout(<span class="number">2000</span>);
-            httpURLConnection.setConnectTimeout(<span class="number">2000</span>);
-            <span class="keyword">if</span> (((httpURLConnection.getResponseCode() == <span class="number">200</span>)||(httpURLConnection.getResponseCode() == <span class="number">403</span>)||(httpURLConnection.getResponseCode() == <span class="number">404</span>))) {
-                <span class="comment">//获取返回内容    </span>
-                InputStream <span class="keyword">in</span> = <span class="literal">null</span>;
-                InputStreamReader inr = <span class="literal">null</span>;
-                BufferedReader reader = <span class="literal">null</span>;
-                StringBuffer resultBuffer = <span class="keyword">new</span> StringBuffer();
-                String tempLine = <span class="literal">null</span>;
-                 <span class="keyword">try</span>{
-                 <span class="keyword">in</span> = httpURLConnection.getInputStream();
-                 <span class="comment">//先对数据流进行utf-8转码，解决乱码</span>
-                 inr = <span class="keyword">new</span> InputStreamReader(<span class="keyword">in</span>,<span class="string">"utf-8"</span>);
-                 reader = <span class="keyword">new</span> BufferedReader(inr);
-                 <span class="keyword">while</span>((tempLine = reader.readLine())!=<span class="literal">null</span>){
-                     <span class="keyword">if</span>(tempLine.indexOf(<span class="string">"ir"</span>)&gt;<span class="number">0</span>&amp;&amp;tempLine.length()&lt;<span class="number">5</span>){
-                         WriteToFile.fWriter(<span class="string">"C:/Users/Administrator/Desktop/svnSuccess.txt"</span>, url);
-                         <span class="keyword">break</span>;
-                     }
-                 }
-                 }<span class="keyword">finally</span>{
-                 <span class="keyword">if</span>(reader!=<span class="literal">null</span>){
-                 reader.close();
-                 }
-                 <span class="keyword">if</span>(inr!=<span class="literal">null</span>){
-                 inr.close();
-                 }
-                 <span class="keyword">if</span>(<span class="keyword">in</span>!=<span class="literal">null</span>){
-                 <span class="keyword">in</span>.close();
-                 }
-                 }
-            }
-            <span class="keyword">else</span>{
-            }
-        } <span class="keyword">catch</span> (IOException e) {
-        }
-
-        }
-    }
-
-}
-}
-</code></pre><p>本文由HackBraid整理总结，如需转载请注明出处。</p>
+        <h2 id="0x00_背景">0x00 背景</h2><p>首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql.png" alt=""><br><a id="more"></a></p>
+<h2 id="0x01_环境搭建">0x01 环境搭建</h2><p>PHP+MySql的集成环境特别多，像PhpStudy、Wamp和Lamp等下一步下一步点下去就成功安装了，网上搜索一下很多就不赘述。<br>这里提的环境是SQLol，它是一个可配置的SQL注入测试平台，包含了简单的SQL注入测试环境，即SQL语句的四元素增（Insert）、删（Delete）、改（Update）和查（Select）。<br>源码我打包了一份：<a href="http://pan.baidu.com/s/1nu2vaOT" title="Sqlol.zip" target="_blank" rel="external">http://pan.baidu.com/s/1nu2vaOT</a><br>解压到www的sql目录下，直接打开<a href="http://localhost/sql即可看到如下界面：" target="_blank" rel="external">http://localhost/sql即可看到如下界面：</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql1.png" alt=""></p>
+<h2 id="0x02_漏洞分析">0x02 漏洞分析</h2><p>这里写审计过程<br>首先看下源码结构，比较简单，只有一个include文件夹包含一些数据库配置文件：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol0.png" alt=""><br>直接看select.php文件：<br>1.开始引入了/include/nav.inc.php</p>
+<pre><code><span class="php"><span class="preprocessor">&lt;?php</span>
+<span class="keyword">include</span>(<span class="string">'includes/nav.inc.php'</span>);
+<span class="preprocessor">?&gt;</span></span>
+</code></pre><h2 id="0x03_漏洞证明">0x03 漏洞证明</h2><p>这里写POC证明<br>本文由HackBraid整理总结，如需转载请联系作者。</p>
 
       
     </div>
@@ -347,11 +218,11 @@
       
         <div class="post-tags">
           
-            <a href="/tags/JAVA/"> #JAVA </a>
+            <a href="/tags/PHP/"> #PHP </a>
           
-            <a href="/tags/SVN/"> #SVN </a>
+            <a href="/tags/SQL注入/"> #SQL注入 </a>
           
-            <a href="/tags/多线程/"> #多线程 </a>
+            <a href="/tags/代码审计/"> #代码审计 </a>
           
         </div>
       
@@ -360,13 +231,11 @@
         <div class="post-nav">
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2015/12/17/sql0/">【PHP代码审计实例教程】 那些年我们一起学SQL - 1.什么都没过滤的入门情况</a>
-            
           </div>
 
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/09/23/producerconsumer/">Java基于queue的多线程模拟生产者消费者问题</a>
+              <a href="/2015/12/16/svnExtract/">Java基于queue的多线程提取SVN信息泄露程序</a>
             
           </div>
         </div>
@@ -386,8 +255,8 @@
     
       <div class="comments" id="comments">
         
-          <div class="ds-thread" data-thread-key="2015/12/16/svnExtract/"
-               data-title="Java基于queue的多线程提取SVN信息泄露程序" data-url="http://hackbraid.github.io/2015/12/16/svnExtract/">
+          <div class="ds-thread" data-thread-key="2015/12/17/sql0/"
+               data-title="【PHP代码审计实例教程】 那些年我们一起学SQL - 1.什么都没过滤的入门情况" data-url="http://hackbraid.github.io/2015/12/17/sql0/">
           </div>
         
       </div>
@@ -502,7 +371,7 @@
           <div class="post-toc">
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00_背景"><span class="nav-number">1.</span> <span class="nav-text">0x00 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_基于Queue的多线程提取SVN信息泄露的实现"><span class="nav-number">2.</span> <span class="nav-text">0x01 基于Queue的多线程提取SVN信息泄露的实现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00_背景"><span class="nav-number">1.</span> <span class="nav-text">0x00 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_环境搭建"><span class="nav-number">2.</span> <span class="nav-text">0x01 环境搭建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_漏洞分析"><span class="nav-number">3.</span> <span class="nav-text">0x02 漏洞分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_漏洞证明"><span class="nav-number">4.</span> <span class="nav-text">0x03 漏洞证明</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator"></div>
