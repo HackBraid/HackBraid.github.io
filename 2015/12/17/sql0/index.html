@@ -203,9 +203,9 @@
       
 
       
-        <h2 id="0x01_背景">0x01 背景</h2><p>首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql.png" alt=""><br><a id="more"></a></p>
-<h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>PHP+MySql的集成环境特别多，像PhpStudy、Wamp和Lamp等下一步下一步点下去就成功安装了，网上搜索一下很多就不赘述。<br>这里提的环境是SQLol，它是一个可配置的SQL注入测试平台，包含了简单的SQL注入测试环境，即SQL语句的四元素增（Insert）、删（Delete）、改（Update）和查（Select）。<br>①源码我打包了一份：<a href="http://pan.baidu.com/s/1nu2vaOT" title="Sqlol.zip" target="_blank" rel="external">http://pan.baidu.com/s/1nu2vaOT</a><br>②解压到www的sql目录下，直接打开<a href="http://localhost/sql即可看到如下界面：" target="_blank" rel="external">http://localhost/sql即可看到如下界面：</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql1.png" alt=""></p>
-<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>这里写审计过程<br>首先看下源码结构，比较简单，只有一个include文件夹包含一些数据库配置文件：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol0.png" alt=""><br>1.看select.php文件，开始引入了/include/nav.inc.php</p>
+        <h2 id="0x01_背景">0x01 背景</h2><p>首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。大牛请自觉绕道~<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql.png" alt=""><br><a id="more"></a></p>
+<h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>PHP+MySql的集成环境特别多，像PhpStudy、Wamp和Lamp等下一步下一步点下去就成功安装了，网上搜索一下很多就不赘述。<br>这里提的环境是SQLol，它是一个可配置的SQL注入测试平台，包含了简单的SQL注入测试环境，即SQL语句的四元素增（Insert）、删（Delete）、改（Update）和查（Select）。<br>PS：什么都没过滤的情况太少了，现在再怎么没有接触过安全的程序员都知道用一些现成的框架来写代码，都有过滤的。所以这个平台主要训练在各种情况下如何进行sql注入以及如何写POC。<br>①源码我打包了一份：<a href="http://pan.baidu.com/s/1nu2vaOT" title="Sqlol.zip" target="_blank" rel="external">http://pan.baidu.com/s/1nu2vaOT</a><br>②解压到www的sql目录下，直接打开<a href="http://localhost/sql即可看到如下界面：" target="_blank" rel="external">http://localhost/sql即可看到如下界面：</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql1.png" alt=""></p>
+<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>首先看下源码结构，比较简单，只有一个include文件夹包含一些数据库配置文件：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol0.png" alt=""><br>这里进行简单的源码分析，看不懂就略过以后再看~<br>1.看select.php文件，开始引入了/include/nav.inc.php</p>
 <pre><code><span class="php"><span class="preprocessor">&lt;?php</span>
 <span class="keyword">include</span>(<span class="string">'includes/nav.inc.php'</span>);
 <span class="preprocessor">?&gt;</span></span>
@@ -215,7 +215,7 @@
 
 <span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">'submit'</span>])){ <span class="comment">//submit后，开始进入处理程序</span>
 
-<span class="keyword">switch</span>(<span class="variable">$_REQUEST</span>[<span class="string">'sanitize_quotes'</span>]){ <span class="comment">//单引号的处理，表单选择不过滤，就是对应none，下面也就没有那个case</span>
+<span class="keyword">switch</span>(<span class="variable">$_REQUEST</span>[<span class="string">'sanitize_quotes'</span>]){ <span class="comment">//单引号的处理，表单选择不过滤，就是对应none，新手看不懂可以学好php再回来</span>
 
     <span class="keyword">case</span> <span class="string">'quotes_double'</span>:
         <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>] = str_replace(<span class="string">'\''</span>, <span class="string">'\'\''</span>, <span class="variable">$_REQUEST</span>[<span class="string">'inject_string'</span>]);
