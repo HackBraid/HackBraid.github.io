@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-02-19T09:40:41.942Z</updated>
+  <updated>2016-02-19T09:55:35.551Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之二次注入</title>
+    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入</title>
     <link href="http://www.cnbraid.com/2016/02/19/sql3/"/>
     <id>http://www.cnbraid.com/2016/02/19/sql3/</id>
     <published>2016-02-19T02:35:00.000Z</published>
-    <updated>2016-02-19T09:40:41.942Z</updated>
+    <updated>2016-02-19T09:55:35.551Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：&lt;/p&gt;
 &lt;blockquote&gt;
