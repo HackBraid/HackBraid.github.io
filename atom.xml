@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-02-17T08:54:15.192Z</updated>
+  <updated>2016-02-19T09:34:21.118Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -14,6 +14,156 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之二次注入</title>
+    <link href="http://www.cnbraid.com/2016/02/19/sql3/"/>
+    <id>http://www.cnbraid.com/2016/02/19/sql3/</id>
+    <published>2016-02-19T02:35:00.000Z</published>
+    <updated>2016-02-19T09:34:21.118Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Insert into table (username) values (‘hack\’’);&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询d的话就会成功的引入了单引号导致注入。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的74cms程序，版本为3.4（20140310）&lt;br&gt;①源码网上可以搜到，我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1c1mLCru&quot; title=&quot;74cmsV3.4(20140310).zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1c1mLCru&lt;/a&gt;&lt;br&gt;②解压到www的74cms(20140310)目录下，浏览器访问&lt;a href=&quot;http://localhost/74cms(20140310&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://localhost/74cms(20140310)&lt;/a&gt;)，然后按照提示一步步安装即可，安装遇到问题请自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_02.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Part1:源码结构&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;源码的结构比较清晰，应该是审计过最清晰的结构了，主要有下面三块内容：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;index.php引入了common.inc.php文件，我们跟进common.inc.php，发现了处理gpc的函数:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (!&lt;span class=&quot;keyword&quot;&gt;empty&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;))
+{
+&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;  = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;);
+}
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (!&lt;span class=&quot;keyword&quot;&gt;empty&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt;))
+{
+&lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt; = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt;);
+}
+&lt;span class=&quot;variable&quot;&gt;$_COOKIE&lt;/span&gt;   = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_COOKIE&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;  = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看到，服务端处理GET和POST请求的变量时都会做addslashes处理。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Part2:审计过程&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;1.首先在个人发布简历处：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;elseif (&lt;span class=&quot;variable&quot;&gt;$act&lt;/span&gt;==&lt;span class=&quot;string&quot;&gt;&#39;make4_save&#39;&lt;/span&gt;)
+
+{
+
+&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_education=get_resume_education($_SESSION[&lt;span class=&quot;string&quot;&gt;&#39;uid&#39;&lt;/span&gt;],$_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;pid&#39;&lt;/span&gt;]);
+
+
+
+if (count(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_education)&amp;gt;=&lt;span class=&quot;number&quot;&gt;6&lt;/span&gt;) showmsg(&lt;span class=&quot;string&quot;&gt;&#39;教育经历不能超过6条！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$link&lt;/span&gt;);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;uid&#39;&lt;/span&gt;]=intval($_SESSION[&lt;span class=&quot;string&quot;&gt;&#39;uid&#39;&lt;/span&gt;]);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;pid&#39;&lt;/span&gt;]=intval($_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;pid&#39;&lt;/span&gt;]);
+
+if (&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;uid&#39;&lt;/span&gt;]==&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt; || &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;pid&#39;&lt;/span&gt;]==&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt; ) showmsg(&lt;span class=&quot;string&quot;&gt;&#39;参数错误！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;start&#39;&lt;/span&gt;]=trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;start&#39;&lt;/span&gt;])?$_POST[&lt;span class=&quot;string&quot;&gt;&#39;start&#39;&lt;/span&gt;]:showmsg(&lt;span class=&quot;string&quot;&gt;&#39;请填写开始时间！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$link&lt;/span&gt;);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;endtime&#39;&lt;/span&gt;]=trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;endtime&#39;&lt;/span&gt;])?$_POST[&lt;span class=&quot;string&quot;&gt;&#39;endtime&#39;&lt;/span&gt;]:showmsg(&lt;span class=&quot;string&quot;&gt;&#39;请填写结束时间！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$link&lt;/span&gt;);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;school&#39;&lt;/span&gt;]=trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;school&#39;&lt;/span&gt;])?$_POST[&lt;span class=&quot;string&quot;&gt;&#39;school&#39;&lt;/span&gt;]:showmsg(&lt;span class=&quot;string&quot;&gt;&#39;请填写学校名称！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$link&lt;/span&gt;);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;speciality&#39;&lt;/span&gt;]=trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;speciality&#39;&lt;/span&gt;])?$_POST[&lt;span class=&quot;string&quot;&gt;&#39;speciality&#39;&lt;/span&gt;]:showmsg(&lt;span class=&quot;string&quot;&gt;&#39;请填写专业名称！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$link&lt;/span&gt;);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;education&#39;&lt;/span&gt;]=trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;education&#39;&lt;/span&gt;])?$_POST[&lt;span class=&quot;string&quot;&gt;&#39;education&#39;&lt;/span&gt;]:showmsg(&lt;span class=&quot;string&quot;&gt;&#39;请选择获得学历！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$link&lt;/span&gt;);
+
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;education_cn&#39;&lt;/span&gt;]=trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;education_cn&#39;&lt;/span&gt;])?$_POST[&lt;span class=&quot;string&quot;&gt;&#39;education_cn&#39;&lt;/span&gt;]:showmsg(&lt;span class=&quot;string&quot;&gt;&#39;请选择获得学历！&#39;&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$link&lt;/span&gt;);
+    //看到这里有个插入表“qs_resume_education”的操作，将教育背景相关的字段入库
+    if (inserttable(table(&lt;span class=&quot;string&quot;&gt;&#39;resume_education&#39;&lt;/span&gt;),&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;))
+
+    {
+
+        check_resume($_SESSION[&lt;span class=&quot;string&quot;&gt;&#39;uid&#39;&lt;/span&gt;],intval($_REQUEST[&lt;span class=&quot;string&quot;&gt;&#39;pid&#39;&lt;/span&gt;]));
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;2.这里看到insert入库了，可以尝试加个单引号，入库后就会消除转义字符。我们先继续跟进inserttables后的check_resume函数&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;//检查简历的完成程度
+&lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; check_resume(&lt;span class=&quot;variable&quot;&gt;$uid&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$pid&lt;/span&gt;)
+{
+global &lt;span class=&quot;variable&quot;&gt;$db&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$timestamp&lt;/span&gt;,$_CFG;
+&lt;span class=&quot;variable&quot;&gt;$uid&lt;/span&gt;=intval(&lt;span class=&quot;variable&quot;&gt;$uid&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$pid&lt;/span&gt;=intval(&lt;span class=&quot;variable&quot;&gt;$pid&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;;
+&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic=get_resume_basic(&lt;span class=&quot;variable&quot;&gt;$uid&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$pid&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_intention=&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;intention_jobs&#39;&lt;/span&gt;];
+&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_specialty=&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;specialty&#39;&lt;/span&gt;];
+//获取教育经历，出数据库了
+&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_education=get_resume_education(&lt;span class=&quot;variable&quot;&gt;$uid&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$pid&lt;/span&gt;);
+if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic))&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;+&lt;span class=&quot;number&quot;&gt;15&lt;/span&gt;;
+if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_intention))&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;+&lt;span class=&quot;number&quot;&gt;15&lt;/span&gt;;
+if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_specialty))&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;+&lt;span class=&quot;number&quot;&gt;15&lt;/span&gt;;
+if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_education))&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;+&lt;span class=&quot;number&quot;&gt;15&lt;/span&gt;;
+if (&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;photo_img&#39;&lt;/span&gt;] &amp;amp;&amp;amp; &lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;photo_audit&#39;&lt;/span&gt;]==&lt;span class=&quot;string&quot;&gt;&quot;1&quot;&lt;/span&gt;  &amp;amp;&amp;amp; &lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;photo_display&#39;&lt;/span&gt;]==&lt;span class=&quot;string&quot;&gt;&quot;1&quot;&lt;/span&gt;)
+{
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;photo&#39;&lt;/span&gt;]=&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;;
+}
+else
+{
+&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;photo&#39;&lt;/span&gt;]=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;;
+}
+if (&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;&amp;lt;&lt;span class=&quot;number&quot;&gt;60&lt;/span&gt;)
+{
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;complete_percent&#39;&lt;/span&gt;]=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;complete&#39;&lt;/span&gt;]=&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;;
+}
+else
+{
+    &lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_work=get_resume_work(&lt;span class=&quot;variable&quot;&gt;$uid&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$pid&lt;/span&gt;);
+    &lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_training=get_resume_training(&lt;span class=&quot;variable&quot;&gt;$uid&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$pid&lt;/span&gt;);
+    &lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_photo=&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;photo_img&#39;&lt;/span&gt;];
+    if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_work))&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;+&lt;span class=&quot;number&quot;&gt;13&lt;/span&gt;;
+    if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_training))&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;+&lt;span class=&quot;number&quot;&gt;13&lt;/span&gt;;
+    if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_photo))&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;+&lt;span class=&quot;number&quot;&gt;14&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;complete&#39;&lt;/span&gt;]=&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;complete_percent&#39;&lt;/span&gt;]=&lt;span class=&quot;variable&quot;&gt;$percent&lt;/span&gt;;
+    require_once(QISHI_ROOT_PATH.&lt;span class=&quot;string&quot;&gt;&#39;include/splitword.class.php&#39;&lt;/span&gt;);
+    &lt;span class=&quot;variable&quot;&gt;$sp&lt;/span&gt; = new SPWord();
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]=&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;intention_jobs&#39;&lt;/span&gt;].&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;recentjobs&#39;&lt;/span&gt;].&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;specialty&#39;&lt;/span&gt;];        
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]=&lt;span class=&quot;string&quot;&gt;&quot;{$resume_basic[&#39;fullname&#39;]} &quot;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$sp-&lt;/span&gt;&amp;gt;extracttag(&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]);
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]=str_replace(&lt;span class=&quot;string&quot;&gt;&quot;,&quot;&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&quot; &quot;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_basic[&lt;span class=&quot;string&quot;&gt;&#39;intention_jobs&#39;&lt;/span&gt;]).&lt;span class=&quot;string&quot;&gt;&quot; {$setsqlarr[&#39;key&#39;]} {$resume_basic[&#39;education_cn&#39;]}&quot;&lt;/span&gt;;
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]=&lt;span class=&quot;variable&quot;&gt;$sp-&lt;/span&gt;&amp;gt;pad(&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]);    
+    if (!empty(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_education))
+    {
+        //遍历教育经历所有字段，加入到数组里
+        foreach(&lt;span class=&quot;variable&quot;&gt;$resume&lt;/span&gt;_education as &lt;span class=&quot;variable&quot;&gt;$li&lt;/span&gt;)
+        {
+        &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]=&lt;span class=&quot;string&quot;&gt;&quot;{$li[&#39;school&#39;]} {$setsqlarr[&#39;key&#39;]} {$li[&#39;speciality&#39;]}&quot;&lt;/span&gt;;
+        }
+    }
+    &lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;refreshtime&#39;&lt;/span&gt;]=&lt;span class=&quot;variable&quot;&gt;$timestamp&lt;/span&gt;;
+}
+//这里对教育经历做了次更新操作，二次注入由此产生！
+updatetable(table(&lt;span class=&quot;string&quot;&gt;&#39;resume&#39;&lt;/span&gt;),&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&quot;uid=&#39;{$uid}&#39; AND id=&#39;{$pid}&#39;&quot;&lt;/span&gt;);
+updatetable(table(&lt;span class=&quot;string&quot;&gt;&#39;resume_tmp&#39;&lt;/span&gt;),&lt;span class=&quot;variable&quot;&gt;$setsqlarr&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&quot;uid=&#39;{$uid}&#39; AND id=&#39;{$pid}&#39;&quot;&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;3.我们填写一份简历简单试验下，在教育经历处学校名称字段填写aa’&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_04.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;保存后发现报错语句：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_05.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x04_漏洞证明&quot;&gt;0x04 漏洞证明&lt;/h2&gt;&lt;p&gt;构造获取数据库用户相关信息的POC：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_06.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;查看简历发现简历姓名变成了root@localhost:&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_07.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;查看sql语句发现更新语句是成功执行的：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_08.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;最后，有兴趣的同学可以继续获取其它的管理员账户等相关字段的信息。&lt;/p&gt;
+&lt;p&gt;本文由HackBraid整理总结，如需转载请联系作者。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Insert into table (username) values (‘hack\’’);&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询d的话就会成功的引入了单引号导致注入。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="WEB安全" scheme="http://www.cnbraid.com/categories/WEB%E5%AE%89%E5%85%A8/"/>
+    
+    
+      <category term="PHP" scheme="http://www.cnbraid.com/tags/PHP/"/>
+    
+      <category term="SQL注入" scheme="http://www.cnbraid.com/tags/SQL%E6%B3%A8%E5%85%A5/"/>
+    
+      <category term="代码审计" scheme="http://www.cnbraid.com/tags/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/"/>
+    
+  </entry>
   
   <entry>
     <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode</title>
