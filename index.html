@@ -209,15 +209,6 @@
 
     
     
-      
-      
-        
-        
-        
-      
-
-      
-    
 
     
       
@@ -321,7 +312,7 @@
 <blockquote>
 <p>Insert into table (username) values (‘hack\’’);</p>
 </blockquote>
-<p>这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询d的话就会成功的引入了单引号导致注入。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png" alt=""><br>
+<p>这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询的话就会成功的引入了单引号导致注入。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-068362">http://www.wooyun.org/bugs/wooyun-2014-068362</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png" alt=""><br>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/02/19/sql3/#more" rel="contents">
               阅读全文 &raquo;

@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-02-19T09:34:21.118Z</updated>
+  <updated>2016-02-19T09:40:41.942Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -20,13 +20,13 @@
     <link href="http://www.cnbraid.com/2016/02/19/sql3/"/>
     <id>http://www.cnbraid.com/2016/02/19/sql3/</id>
     <published>2016-02-19T02:35:00.000Z</published>
-    <updated>2016-02-19T09:34:21.118Z</updated>
+    <updated>2016-02-19T09:40:41.942Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;Insert into table (username) values (‘hack\’’);&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询d的话就会成功的引入了单引号导致注入。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询的话就会成功的引入了单引号导致注入。&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-068362&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-068362&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的74cms程序，版本为3.4（20140310）&lt;br&gt;①源码网上可以搜到，我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1c1mLCru&quot; title=&quot;74cmsV3.4(20140310).zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1c1mLCru&lt;/a&gt;&lt;br&gt;②解压到www的74cms(20140310)目录下，浏览器访问&lt;a href=&quot;http://localhost/74cms(20140310&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://localhost/74cms(20140310)&lt;/a&gt;)，然后按照提示一步步安装即可，安装遇到问题请自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_02.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;blockquote&gt;
 &lt;p&gt;&lt;strong&gt;Part1:源码结构&lt;/strong&gt;&lt;/p&gt;
@@ -150,7 +150,7 @@ updatetable(table(&lt;span class=&quot;string&quot;&gt;&#39;resume_tmp&#39;&lt;/
 &lt;blockquote&gt;
 &lt;p&gt;Insert into table (username) values (‘hack\’’);&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询d的话就会成功的引入了单引号导致注入。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+&lt;p&gt;这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询的话就会成功的引入了单引号导致注入。&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-068362&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-068362&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
     
     </summary>
     
