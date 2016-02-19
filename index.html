@@ -209,15 +209,6 @@
 
     
     
-      
-      
-        
-        
-        
-      
-
-      
-    
 
     
       
@@ -438,7 +429,7 @@
 
       
         
-          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png" alt=""><br>
+          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-050338">http://www.wooyun.org/bugs/wooyun-2014-050338</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png" alt=""><br>
           <div class="post-more-link text-center">
             <a class="btn" href="/2015/12/24/sql1/#more" rel="contents">
               阅读全文 &raquo;

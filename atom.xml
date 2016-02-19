@@ -90,9 +90,9 @@ public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; doauth() {
     <link href="http://www.cnbraid.com/2015/12/24/sql1/"/>
     <id>http://www.cnbraid.com/2015/12/24/sql1/</id>
     <published>2015-12-24T02:35:00.000Z</published>
-    <updated>2016-02-16T10:27:17.008Z</updated>
+    <updated>2016-02-19T02:43:29.257Z</updated>
     
-    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-050338&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-050338&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的easytalk程序，版本为X2.4&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1bopOFNL&quot; title=&quot;easytalk.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1bopOFNL&lt;/a&gt;&lt;br&gt;②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;p&gt;首先看下源码结构，用的ThinkPHP框架，比较复杂：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：&lt;br&gt;1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行：&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;/**
@@ -157,7 +157,7 @@ static public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; addSla
     
     <summary type="html">
     
-      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-050338&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-050338&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
     
     </summary>
     
