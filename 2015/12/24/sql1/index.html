@@ -74,7 +74,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_10.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_11.png">
-<meta property="og:updated_time" content="2016-02-15T06:25:57.699Z">
+<meta property="og:updated_time" content="2016-02-16T10:27:17.008Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
 <meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~">
@@ -326,7 +326,7 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
     }
     return <span class="variable">$string</span>;
 }    
-</code></pre><p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”urldecode”的文件，发现TopicAction.class.php包含一个对接收的参数keyword进行urldecode的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_4.png" alt=""><br>3.我们跟进这个php文件，发现接收keyword就对其进行urldecode转码，然后立即带入查询，造成注入：</p>
+</code></pre><p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”urldecode”的文件，发现TopicAction.class.php包含一个对接收的参数keyword进行urldecode并且有sql查询的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_4.png" alt=""><br>3.我们跟进这个php文件，发现接收keyword就对其进行urldecode转码，然后立即带入查询，造成注入：</p>
 <pre><code>public <span class="keyword">function</span> topic() {
     <span class="variable">$keyword</span>=<span class="variable">$this-</span>&gt;_get(<span class="string">'keyword'</span>,<span class="string">'urldecode'</span>);//使用ThinkPHP框架自带的_get对接收的keyword参数进行urldecode(详见http://doc.thinkphp.cn/manual/get_system_var.html)
     if (<span class="variable">$keyword</span>) {
@@ -395,6 +395,10 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/02/18/sql2/" rel="prev" title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
+                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -466,7 +470,7 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">5</span>
+              <span class="site-state-item-count">6</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -480,7 +484,7 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
 
           <div class="site-state-item site-state-tags">
             <a href="/tags">
-              <span class="site-state-item-count">9</span>
+              <span class="site-state-item-count">12</span>
               <span class="site-state-item-name">标签</span>
               </a>
           </div>
@@ -572,12 +576,13 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
 </div>
 
 <div class="powered-by">
-  信息安全博客
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
 </div>
 
 <div class="theme-info">
-  邮箱：<a class="theme-link" href="mailto:hackbraid@gmail.com">
-    hackbraid@gmail.com
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
   </a>
 </div>
 

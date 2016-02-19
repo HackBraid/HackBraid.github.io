@@ -1,0 +1,593 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css"/>
+
+
+
+
+  <link href="//fonts.googleapis.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content=",," />
+
+
+
+
+
+  <link rel="alternate" href="http://www.cnbraid.com/atom.xml" title="Braid's Blog" type="application/atom+xml" />
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.0" />
+
+
+
+
+
+
+<meta name="description" content="0x01 前瞻安全是一个整体，保证安全不在于强大的地方有多强大，而在于真正薄弱的地方在哪里。2015年是漏洞爆发的一年，据统计，汽车之家在去年一共有334次被成功入侵和攻击的行为，而在这334次中有96次是因为邮箱或者VPN的弱口令导致的。另外，员工日常不规范的行为也在内部做了统计和相应的惩罚。所以围绕着这两个安全问题，笔者对一些有意思的案例进行了深入的分析和思考。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="【汽车人内刊】 安全是一个整体">
+<meta property="og:url" content="http://www.cnbraid.com/汽车人内刊.html">
+<meta property="og:site_name" content="Braid's Blog">
+<meta property="og:description" content="0x01 前瞻安全是一个整体，保证安全不在于强大的地方有多强大，而在于真正薄弱的地方在哪里。2015年是漏洞爆发的一年，据统计，汽车之家在去年一共有334次被成功入侵和攻击的行为，而在这334次中有96次是因为邮箱或者VPN的弱口令导致的。另外，员工日常不规范的行为也在内部做了统计和相应的惩罚。所以围绕着这两个安全问题，笔者对一些有意思的案例进行了深入的分析和思考。">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/password.png">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/服务爆破.jpg">
+<meta property="og:updated_time" content="2016-02-17T09:40:23.563Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【汽车人内刊】 安全是一个整体">
+<meta name="twitter:description" content="0x01 前瞻安全是一个整体，保证安全不在于强大的地方有多强大，而在于真正薄弱的地方在哪里。2015年是漏洞爆发的一年，据统计，汽车之家在去年一共有334次被成功入侵和攻击的行为，而在这334次中有96次是因为邮箱或者VPN的弱口令导致的。另外，员工日常不规范的行为也在内部做了统计和相应的惩罚。所以围绕着这两个安全问题，笔者对一些有意思的案例进行了深入的分析和思考。">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: '[object Object]',
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+  <title>
+  
+
+  
+    【汽车人内刊】 安全是一个整体 | Braid's Blog
+  
+</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left  ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">Braid's Blog</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">攻城狮，黑客，网络安全爱好者</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home fa-fw"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive fa-fw"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+      
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+    
+      <h2 id="0x01_前瞻">0x01 前瞻</h2><p>安全是一个整体，保证安全不在于强大的地方有多强大，而在于真正薄弱的地方在哪里。2015年是漏洞爆发的一年，据统计，汽车之家在去年一共有334次被成功入侵和攻击的行为，而在这334次中有96次是因为邮箱或者VPN的弱口令导致的。另外，员工日常不规范的行为也在内部做了统计和相应的惩罚。所以围绕着这两个安全问题，笔者对一些有意思的案例进行了深入的分析和思考。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/password.png" alt=""><br><a id="more"></a></p>
+<h2 id="0x02_弱口令">0x02 弱口令</h2><p>在2015年，邮箱和VPN的弱口令问题频频被爆露出来。面对弱口令，有很直观的三个问题：我的邮箱VPN都是弱口令到底会对公司能够造成什么样的危害？我认为不是弱口令那为什么黑客会知道我的密码呢？如何才能更好的保护好我们的账户？我们首先看一个真实的案例。</p>
+<p><strong>Part1：一个被入侵的案例</strong></p>
+<p>蝴蝶效应，相信这个词大家都很熟悉它的概念，接下来笔者引入一个黑客A来介绍一个弱口令将会引发怎样的核爆炸~</p>
+<blockquote>
+<p>信息收集</p>
+</blockquote>
+<p>黑客A通过一些较为简单的方法获取到了一批用户名和密码字典（后面为什么黑客知道你的密码篇章会做介绍），使用特定的爆破程序在5分钟内就获取了某员工hounianmayue的邮箱密码为hounianmayue123。登陆邮箱后，查看并导出企业的通讯录并再次作为用户名字典继续爆破邮箱，成功获取了大量企业员工的账号密码。其中另外一名员工yanfaceshi的密码为yanfaceshi!@#，通过邮件内容里含有代码并有github的邮件判断这很可能是一名研发或测试的同学。</p>
+<blockquote>
+<p>直入内网</p>
+</blockquote>
+<p>A通过特定的程序对VPN系统进行爆破获取了员工yanfaceshi的密码为yanfaceshi123，是一枚弱口令，就这样A直入了汽车之家的内网。<br>那么A入内网可能会做什么呢？（后面内容属于作者虚构+意淫）<br>A入内网后为了满足窥私欲，立即在办公网内获取了大量的windows个人主机账户，通过一定手段开启了你的远程桌面连接，进入你的个人电脑，看你所看。<br>之后毫不收敛的开启了嗅探模式，获取了内网开放的主机和服务并对像ssh、cifs和mssql等服务进行爆破：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/服务爆破.jpg" alt=""><br>之后A使用手中的0day或已公开的Nday进一步获取了内网大量主机的系统权限，最后攻击网关做中间人攻击并捆绑后门为后渗透和扩大战果做准备。</p>
+<blockquote>
+<p>后渗透和扩大战果</p>
+</blockquote>
+<p>一次完美的内网渗透肯定不是能够一次性完成的，所以后渗透准备是很有必要的。<br>A通过特定的程序生成一些远控的后门，控制大量内网的服务器并进行信息窃取，后期时机成熟了就会影响整个公司的线上业务。当然黑客A有强烈的窥私欲，对破坏的行为不太感兴趣，所以A更多的时间会利用内网的服务器对一些特定的人进行深入的APT攻击，尤其是美女妹子。</p>
+<p><strong>Part2：为什么黑客会知道我的密码？</strong></p>
+<p><strong>2000W开放数据库泄露</strong><br>这里先谈下为什么黑客会知道我的用户名，中国作为敏感信息泄露最大的受害国，大量的名字也随之泄露出来。黑客A可以通过手中的2000W开房数据库对名字的次数进行统计，最后统计出了前500多个最常用的用户名。大家有兴趣可以根据拼音在钉钉上搜索下下面的top10是不是在我们公司也有呢？（PS：不要纠结汉字能对上，邮箱或VPN的用户名都是拼音哦）</p>
+<pre><code>id   姓名    人数 
+<span class="number">1</span>    张伟    <span class="number">299025</span> 
+<span class="number">2</span>    王伟    <span class="number">290619</span> 
+<span class="number">3</span>    王芳    <span class="number">277293</span> 
+<span class="number">4</span>    李伟    <span class="number">269453</span> 
+<span class="number">5</span>    李娜    <span class="number">258581</span> 
+<span class="number">6</span>    张敏    <span class="number">245553</span> 
+<span class="number">7</span>    李静    <span class="number">243644</span> 
+<span class="number">8</span>    王静    <span class="number">243339</span> 
+<span class="number">9</span>    刘伟    <span class="number">241621</span> 
+<span class="number">10</span>   张丽    <span class="number">241075</span>
+</code></pre><p><strong>10亿的社工库</strong><br>这里黑客A搜集了10亿条用户和用户密码组成的社工库来研究用户密码设置的规则。通过大数据，A统计出了100多个使用的最多的弱口令，top10如下：</p>
+<pre><code><span class="number">123456789</span> 
+<span class="number">123456</span>
+a123456  
+a123456789 
+<span class="number">1234567890</span> 
+woaini1314 
+qq123456 
+abc123456 
+<span class="number">123456</span>a 
+<span class="number">123456789</span>a 
+</code></pre><p>在整个10亿条密码中，使用123456有4千多万，使用123456789的有9千8百多万。分析这10亿密码可以得出密码用纯数字的大概有3.7亿，就占了36%，密码全部用小写字母当密码的占了41.8%，密码全是大写的占了0.38%，用户名和密码相同的也有两千多多万，占了2.36%，密码中包含了一部分用户名的也有1.32%，使用Top10口令的大概占了17%左右，口令中含有特殊字符的占7.24%。<br>这是针对10亿密码计算出来的结果。当我们分析一些密码的时候，往往也能够得到一些固定的规律。A根据10亿条密码得出一些结论：大多数人设置密码的时候都会把生日加进去，还会把年份加进去，比如这个密码是去年设置的，会把2015加进去；还有可能是名字加上生日，做技术员的会转换一下；还有设密码的时候密码复杂度有要求，就要有数字和特殊符号，就会加上@；还有键盘布局，和公司相关的东西补充进去；还有些地方要求大小写，要么就是第一个大写，要么第一个单词大写这样，或者把自己姓名的第一个首字母大写。<br><strong>other</strong><br>还有一些途径可以直接获取你的账户密码。首先是github，一个开源的代码托管平台。开源意味着你在上面提交的代码是对所有人公开的，A使用自己的爬虫脚本就能获取你在github代码中隐藏的账户密码信息。另外，除了直接在github中获取密码，A还能采用一种间接的方式，看下面的案例：<br>A通过爬取算法精准定位了buyaoheiwo@163.com为汽车之家某员工的个人邮箱。然后通过社工库获取了该邮箱的密码为woshiwugude，由此成功登陆其个人邮箱。之后发现该邮箱还注册了印象笔记的账户，由此成功进入其个人笔记的页面，发现大量的公司账户和订单信息，之后就22333了~</p>
+<p><strong>Part3：如何保护好密码？</strong></p>
+<p>首先是公私分明，所谓公私分明就是个人账户与企业账户完全分离，需要做到两点：<br>①公司账户特别是邮箱账户不能去注册外面的网站；<br>②个人账户不能存放公司的任何信息，特别是账户密码信息。<br>然后就是设置的密码规则：长度在6-16位之间，包括字母、数字、特殊字符，不能与上两次密码相同。<br>最后是密码修改周期：每3个月修改一次密码。</p>
+<h2 id="0x03_员工的不规范行为">0x03 员工的不规范行为</h2><p>私自使用随身wifi<br>离开工位不带手机和锁屏</p>
+
+    
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="汽车人内刊.html"
+           data-title="【汽车人内刊】 安全是一个整体" data-url="http://www.cnbraid.com/汽车人内刊.html">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar.png"
+               alt="Braid" />
+          <p class="site-author-name" itemprop="name">Braid</p>
+          <p class="site-description motion-element" itemprop="description">web | security | java | jsp | php</p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">6</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            <a href="/categories">
+              <span class="site-state-item-count">2</span>
+              <span class="site-state-item-name">分类</span>
+              </a>
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            <a href="/tags">
+              <span class="site-state-item-count">12</span>
+              <span class="site-state-item-name">标签</span>
+              </a>
+          </div>
+
+        </nav>
+
+        
+          <div class="feed-link motion-element">
+            <a href="http://www.cnbraid.com/atom.xml" rel="alternate">
+              <i class="fa fa-rss"></i>
+              RSS
+            </a>
+          </div>
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+            <p class="site-author-name">友情链接</p>
+            
+              <span class="links-of-author-item">
+                <a href="http://tnt1200.github.io/" target="_blank">Tnt1200</a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.iswin.org/" target="_blank">随风</a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://bksec.net/" target="_blank">my5t3ry</a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://mars.run/" target="_blank">Mars</a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.thinkings.in/" target="_blank">Tr3jer_CongRong</a>
+              </span>
+            
+          
+        </div>
+
+      </section>
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Braid</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+
+      </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  
+
+
+  
+
+
+
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js"></script>
+
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js"></script>
+
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.0"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.0"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.0"></script>
+
+
+
+  
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.0"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"hackbraid"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+  
+
+
+
+
+
+  
+  
+
+  
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+  <script>AV.initialize("4mIc01CuAcxNeBtS9VMXLgeW-gzGzoHsz", "gJXfNgx0s7OHWVgJrY5WVs7Y");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+
+</body>
+</html>
