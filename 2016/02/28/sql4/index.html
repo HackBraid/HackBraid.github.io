@@ -61,7 +61,7 @@
 
 <meta name="description" content="0x01 背景首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；2.但如果存在宽字节注入，我们输入%df%27时首先经过上面">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入">
+<meta property="og:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入">
 <meta property="og:url" content="http://www.cnbraid.com/2016/02/28/sql4/index.html">
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；2.但如果存在宽字节注入，我们输入%df%27时首先经过上面">
@@ -69,9 +69,9 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql4_01.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql4_02.png">
-<meta property="og:updated_time" content="2016-02-29T01:19:00.232Z">
+<meta property="og:updated_time" content="2016-02-29T01:58:09.795Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入">
+<meta name="twitter:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入">
 <meta name="twitter:description" content="0x01 背景首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；2.但如果存在宽字节注入，我们输入%df%27时首先经过上面">
 
 
@@ -90,7 +90,7 @@
   };
 </script>
 
-  <title> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入 | Braid's Blog </title>
+  <title> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入 | Braid's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -228,7 +228,7 @@
             
             
               
-                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入
+                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入
               
             
           </h1>
@@ -281,7 +281,7 @@
 
           
           
-             <span id="/2016/02/28/sql4/" class="leancloud_visitors" data-flag-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入">
+             <span id="/2016/02/28/sql4/" class="leancloud_visitors" data-flag-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -485,7 +485,7 @@ exit(<span class="variable">$htm</span>);
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2016/02/28/sql4/"
-           data-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入" data-url="http://www.cnbraid.com/2016/02/28/sql4/">
+           data-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入" data-url="http://www.cnbraid.com/2016/02/28/sql4/">
       </div>
     
   </div>
@@ -537,14 +537,14 @@ exit(<span class="variable">$htm</span>);
 
           <div class="site-state-item site-state-categories">
             <a href="/categories">
-              <span class="site-state-item-count">3</span>
+              <span class="site-state-item-count">2</span>
               <span class="site-state-item-name">分类</span>
               </a>
           </div>
 
           <div class="site-state-item site-state-tags">
             <a href="/tags">
-              <span class="site-state-item-count">12</span>
+              <span class="site-state-item-count">9</span>
               <span class="site-state-item-name">标签</span>
               </a>
           </div>
