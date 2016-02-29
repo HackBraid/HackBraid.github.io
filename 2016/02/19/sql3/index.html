@@ -81,7 +81,7 @@ Insert into table (username) values (‘hack\’’);
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_06.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_07.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_08.png">
-<meta property="og:updated_time" content="2016-02-19T09:55:35.551Z">
+<meta property="og:updated_time" content="2016-02-25T01:47:15.306Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入">
 <meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：
@@ -326,7 +326,9 @@ Insert into table (username) values (‘hack\’’);
 <h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><blockquote>
 <p><strong>Part1:源码结构</strong></p>
 </blockquote>
-<p>源码的结构比较清晰，应该是审计过最清晰的结构了，主要有下面三块内容：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png" alt=""><br>index.php引入了common.inc.php文件，我们跟进common.inc.php，发现了处理gpc的函数:</p>
+<p>源码的结构比较清晰，应该是审计过最清晰的结构了，主要有下面三块内容：</p>
+<p><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png" alt=""></p>
+<p>index.php引入了common.inc.php文件，我们跟进common.inc.php，发现了处理gpc的函数:</p>
 <pre><code><span class="keyword">if</span> (!<span class="keyword">empty</span>(<span class="variable">$_GET</span>))
 {
 <span class="variable">$_GET</span>  = addslashes_deep(<span class="variable">$_GET</span>);
@@ -466,6 +468,10 @@ updatetable(table(<span class="string">'resume_tmp'</span>),<span class="variabl
 
           <div class="post-nav-prev post-nav-item">
             
+              <a href="/2016/02/28/sql4/" rel="prev" title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入">
+                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之宽字节注入 <i class="fa fa-chevron-right"></i>
+              </a>
+            
           </div>
         </div>
       
@@ -536,21 +542,21 @@ updatetable(table(<span class="string">'resume_tmp'</span>),<span class="variabl
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-count">8</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
 
           <div class="site-state-item site-state-categories">
             <a href="/categories">
-              <span class="site-state-item-count">2</span>
+              <span class="site-state-item-count">3</span>
               <span class="site-state-item-name">分类</span>
               </a>
           </div>
 
           <div class="site-state-item site-state-tags">
             <a href="/tags">
-              <span class="site-state-item-count">9</span>
+              <span class="site-state-item-count">12</span>
               <span class="site-state-item-name">标签</span>
               </a>
           </div>
@@ -642,13 +648,12 @@ updatetable(table(<span class="string">'resume_tmp'</span>),<span class="variabl
 </div>
 
 <div class="powered-by">
-  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+  信息安全博客
 </div>
 
 <div class="theme-info">
-  主题 -
-  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
-    NexT.Pisces
+  <a class="theme-link" href="mailto:hackbraid@gmail.com">
+    hackbraid@gmail.com
   </a>
 </div>
 
