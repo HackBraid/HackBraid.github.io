@@ -85,7 +85,7 @@
 
 <meta name="description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-0">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
+<meta property="og:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
 <meta property="og:url" content="http://www.cnbraid.com/2015/12/24/sql1/index.html">
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-0">
@@ -98,9 +98,9 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_9.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_10.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_11.png">
-<meta property="og:updated_time" content="2016-02-19T02:43:29.257Z">
+<meta property="og:updated_time" content="2016-05-03T01:14:24.843Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
+<meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
 <meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-0">
 
 
@@ -119,7 +119,7 @@
   };
 </script>
 
-  <title> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode | Braid's Blog </title>
+  <title> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode | Braid's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -259,7 +259,7 @@
             
             
               
-                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode
+                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode
               
             
           </h1>
@@ -312,7 +312,7 @@
 
           
           
-             <span id="/2015/12/24/sql1/" class="leancloud_visitors" data-flag-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
+             <span id="/2015/12/24/sql1/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -421,16 +421,16 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/12/17/sql0/" rel="next" title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况">
-                <i class="fa fa-chevron-left"></i> 【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况
+              <a href="/2015/12/17/sql0/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况">
+                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/02/18/sql2/" rel="prev" title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
-                【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode <i class="fa fa-chevron-right"></i>
+              <a href="/2016/02/18/sql2/" rel="prev" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
+                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -458,7 +458,7 @@ static public <span class="keyword">function</span> addSlashes(<span class="vari
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2015/12/24/sql1/"
-           data-title="【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode" data-url="http://www.cnbraid.com/2015/12/24/sql1/">
+           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode" data-url="http://www.cnbraid.com/2015/12/24/sql1/">
       </div>
     
   </div>

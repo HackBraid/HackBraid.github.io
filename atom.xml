@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-04-29T10:22:05.002Z</updated>
+  <updated>2016-05-03T01:13:11.075Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结前篇</title>
+    <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结前篇</title>
     <link href="http://www.cnbraid.com/2016/04/29/sql5/"/>
     <id>http://www.cnbraid.com/2016/04/29/sql5/</id>
     <published>2016-04-29T02:35:00.000Z</published>
-    <updated>2016-04-29T10:22:05.002Z</updated>
+    <updated>2016-05-03T01:13:11.075Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～&lt;br&gt;&lt;strong&gt;盲点如下：&lt;/strong&gt;&lt;br&gt;①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；&lt;br&gt;②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；&lt;br&gt;③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。&lt;br&gt;附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE&lt;br&gt;思路来源于乌云drops&lt;a href=&quot;http://drops.wooyun.org/papers/4544&quot; target=&quot;_blank&quot;&gt;http://drops.wooyun.org/papers/4544&lt;/a&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;环境请自行搜寻和搭建吧，从这篇开始只做分析不提供漏洞测试环境~~&lt;/p&gt;
@@ -73,11 +73,11 @@ require_once(MOBAN_PATH_QZ.&lt;span class=&quot;string&quot;&gt;&quot;header.htm
   </entry>
   
   <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入</title>
+    <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入</title>
     <link href="http://www.cnbraid.com/2016/02/28/sql4/"/>
     <id>http://www.cnbraid.com/2016/02/28/sql4/</id>
     <published>2016-02-28T02:35:00.000Z</published>
-    <updated>2016-02-29T01:58:09.795Z</updated>
+    <updated>2016-05-03T01:13:19.891Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：&lt;br&gt;1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；&lt;br&gt;2.但如果存在宽字节注入，我们输入%df%27时首先经过上面提到的单引号转义变成了%df%5c%27（%5c是反斜杠\），之后在数据库查询前由于使用了GBK多字节编码，即在汉字编码范围内两个字节会被编码为一个汉字。然后MySQL服务器会对查询语句进行GBK编码即%df%5c转换成了汉字“運”（注：GBK的汉字编码范围见附录），而单引号逃逸了出来，从而造成了注入漏洞。&lt;br&gt;现在基本上都会将mysql的连接配置为“set character_set_client=binary”来解决这个问题，所以这篇文章将介绍出现在php中因为字符编码导致的注入问题。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;思路来源于FreeBuf：&lt;a href=&quot;http://www.freebuf.com/articles/web/31537.html&quot; target=&quot;_blank&quot;&gt;http://www.freebuf.com/articles/web/31537.html&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-063219&quot; target=&quot;_blank&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-063219&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
@@ -230,11 +230,11 @@ exit(&lt;span class=&quot;variable&quot;&gt;$htm&lt;/span&gt;);
   </entry>
   
   <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入</title>
+    <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入</title>
     <link href="http://www.cnbraid.com/2016/02/19/sql3/"/>
     <id>http://www.cnbraid.com/2016/02/19/sql3/</id>
     <published>2016-02-19T02:35:00.000Z</published>
-    <updated>2016-02-25T01:47:15.306Z</updated>
+    <updated>2016-05-03T01:13:28.643Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：&lt;/p&gt;
 &lt;blockquote&gt;
@@ -382,11 +382,11 @@ updatetable(table(&lt;span class=&quot;string&quot;&gt;&#39;resume_tmp&#39;&lt;/
   </entry>
   
   <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode</title>
+    <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode</title>
     <link href="http://www.cnbraid.com/2016/02/18/sql2/"/>
     <id>http://www.cnbraid.com/2016/02/18/sql2/</id>
     <published>2016-02-18T02:35:00.000Z</published>
-    <updated>2016-02-17T08:54:15.192Z</updated>
+    <updated>2016-05-03T01:13:39.547Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-050338&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-050338&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的easytalk程序，版本为X2.4&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1bopOFNL&quot; title=&quot;easytalk.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1bopOFNL&lt;/a&gt;&lt;br&gt;②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
@@ -452,11 +452,11 @@ public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; doauth() {
   </entry>
   
   <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode</title>
+    <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode</title>
     <link href="http://www.cnbraid.com/2015/12/24/sql1/"/>
     <id>http://www.cnbraid.com/2015/12/24/sql1/</id>
     <published>2015-12-24T02:35:00.000Z</published>
-    <updated>2016-02-19T02:43:29.257Z</updated>
+    <updated>2016-05-03T01:14:24.843Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~&lt;br&gt;&lt;strong&gt;漏洞来源于乌云：&lt;a href=&quot;http://www.wooyun.org/bugs/wooyun-2014-050338&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://www.wooyun.org/bugs/wooyun-2014-050338&lt;/a&gt;&lt;/strong&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_1.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;看背景我们使用了低版本的easytalk程序，版本为X2.4&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1bopOFNL&quot; title=&quot;easytalk.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1bopOFNL&lt;/a&gt;&lt;br&gt;②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
@@ -539,11 +539,11 @@ static public &lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; addSla
   </entry>
   
   <entry>
-    <title>【PHP代码审计实例教程】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况</title>
+    <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况</title>
     <link href="http://www.cnbraid.com/2015/12/17/sql0/"/>
     <id>http://www.cnbraid.com/2015/12/17/sql0/</id>
     <published>2015-12-17T09:35:00.000Z</published>
-    <updated>2015-12-18T06:55:58.845Z</updated>
+    <updated>2016-05-03T01:14:33.115Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。大牛请自觉绕道~&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;PHP+MySql的集成环境特别多，像PhpStudy、Wamp和Lamp等下一步下一步点下去就成功安装了，网上搜索一下很多就不赘述。&lt;br&gt;这里提的环境是SQLol，它是一个可配置的SQL注入测试平台，包含了简单的SQL注入测试环境，即SQL语句的四元素增（Insert）、删（Delete）、改（Update）和查（Select）。&lt;br&gt;PS：什么都没过滤的情况太少了，现在再怎么没有接触过安全的程序员都知道用一些现成的框架来写代码，都有过滤的。所以这个平台主要训练在各种情况下如何进行sql注入以及如何写POC。&lt;br&gt;①源码我打包了一份：&lt;a href=&quot;http://pan.baidu.com/s/1nu2vaOT&quot; title=&quot;Sqlol.zip&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://pan.baidu.com/s/1nu2vaOT&lt;/a&gt;&lt;br&gt;②解压到www的sql目录下，直接打开&lt;a href=&quot;http://localhost/sql即可看到如下界面：&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://localhost/sql即可看到如下界面：&lt;/a&gt;&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sql1.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
