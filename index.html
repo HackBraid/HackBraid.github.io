@@ -329,7 +329,7 @@
 
       
         
-          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～<br><strong>盲点如下：</strong><br>①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；<br>②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；<br>③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。<br>附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE<br>思路来源于乌云drops<a href="http://drops.wooyun.org/papers/4544" target="_blank">http://drops.wooyun.org/papers/4544</a><br>
+          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～<br><strong>盲点如下：</strong><br>①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；<br>②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；<br>③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。<br>附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE<br>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/04/29/sql5/#more" rel="contents">
               阅读全文 &raquo;
