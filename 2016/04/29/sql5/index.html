@@ -94,7 +94,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql05_3.png">
-<meta property="og:updated_time" content="2016-05-10T01:45:17.224Z">
+<meta property="og:updated_time" content="2016-05-10T05:51:43.197Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～盲点如下：①注入">
@@ -346,7 +346,7 @@
 </code></pre><p>$itemid是有单引号保护的并且做了select查询，如果查询有结果才会带入到delete中，如果无结果就不执行delete。在数据库里itemid是int类型存储的，所以这里本意是只能提交数字型才能查询出结果，如果不是提交的数字的话那么就查询不出来结果，就不去执行下面的delete语句了。但是由于mysql的类型转换，因为这里储存的是int类型，所以1xxxxx跟1的查询结果是一样的，如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_02.jpg" alt=""><br>然后后面第二条delete的sql语句如下</p>
 <pre><code>$_SGLOBAL[<span class="string">'db'</span>]-&gt;query(<span class="string">'DELETE FROM '</span>.tname(<span class="string">'spacetags'</span>).<span class="string">' WHERE itemid='</span>.<span class="variable">$itemid</span>.<span class="string">' AND tagid IN ('</span>.simplode(<span class="variable">$deletetagidarr</span>).<span class="string">') AND status=\''.$status.'</span>\<span class="string">''</span>);
 </code></pre><p>这里忘记加单引号了，根据上图我们可以构造获取数据库用户的POC：</p>
-<pre><code><span class="label">http</span>://localhost/sup/dan/supesite/<span class="preprocessor">cp</span>.php?ac<span class="label">=news</span>&amp;op<span class="label">=view</span>&amp;<span class="keyword">itemid=4 </span><span class="keyword">and </span><span class="number">1</span>=(updatexml(<span class="number">1</span>,concat()))
+<pre><code><span class="label">http</span>://localhost/sup/dan/supesite/<span class="preprocessor">cp</span>.php?ac<span class="label">=news</span>&amp;op<span class="label">=view</span>&amp;<span class="keyword">itemid=4 </span><span class="keyword">and </span><span class="number">1</span>=(updatexml(<span class="number">1</span>,concat(<span class="number">0x5e24</span>,(<span class="keyword">select </span>user()),<span class="number">0x5e24</span>),<span class="number">1</span>))#
 </code></pre><p><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.jpg" alt=""></p>
 <blockquote>
 <p>3.php弱类型语言,判断逻辑错误引发注入</p>
