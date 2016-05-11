@@ -95,7 +95,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_04.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql2_1.png">
-<meta property="og:updated_time" content="2016-05-03T07:00:32.541Z">
+<meta property="og:updated_time" content="2016-05-11T03:17:01.850Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
 <meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。漏洞来源于乌云：http://www.wooyun.org/bugs/wooyun-2014-050338">
@@ -339,7 +339,7 @@
 </code></pre><p>查看sql语句发现成功执行：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg" alt=""><br>发现这里是一个盲注，并没有输出，所以我们使用sql盲注的语句。获取当前数据库用户名的第一个字符是不是‘r’（ascii值为114）的POC：</p>
 <pre><code><span class="string">http:</span><span class="comment">//localhost/eazytalk/?m=index&amp;a=mailactivity&amp;auth=MicgYW5kIChzZWxlY3QgaWYoKGFzY2lpKHN1YnN0cmluZygoc2VsZWN0IHVzZXIoKSksMSwxKSkgPSAxMTQpLHNsZWVwKDUpLDApKSM=</span>
 </code></pre><p>页面持续了5秒，说明user()的第一个字符为‘r’，查看sql语句发现成功执行：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql2_1.png" alt=""><br>最后，有兴趣的同学可以自己写个py脚本来跑这种盲注。</p>
-<p>本文由HackBraid整理总结，如需转载请联系作者。</p>
+<p>本文由HackBraid整理总结，原文链接：<a href="http://www.cnbraid.com/2016/02/18/sql2/">http://www.cnbraid.com/2016/02/18/sql2/</a>，如需转载请联系作者。</p>
 
       
     </div>

