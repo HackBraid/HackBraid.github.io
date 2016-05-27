@@ -90,7 +90,9 @@
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg">
-<meta property="og:updated_time" content="2016-05-11T03:19:28.905Z">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_02.jpg">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_03.jpg">
+<meta property="og:updated_time" content="2016-05-27T08:40:42.118Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
@@ -332,6 +334,9 @@
 <p>上传一个文件，然后修改文件名称为以下代码即可获取管理员账户密码：</p>
 <pre><code>filename="1','.php',1,(<span class="operator">select <span class="keyword">concat</span>(username,<span class="number">0x23</span>,<span class="keyword">password</span>) <span class="keyword">from</span> ask_user <span class="keyword">limit</span> <span class="number">1</span>),<span class="number">2</span>,<span class="number">1</span>)#.jpg<span class="string">"</span></span>
 </code></pre><p>数据库里成功将管理员账户密码插入到attach表中：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg" alt=""></p>
+<h3 id="变量覆盖">变量覆盖</h3><p>出现比较多的是<strong>extract函数</strong>，例如extract($_POST)会直接从POST数组中取出变量，覆盖掉之前的一些变量。<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="variable">$a</span>=<span class="number">222333</span>;</span><br><span class="line">@extract(<span class="variable">$_POST</span>);</span><br><span class="line">print_r(<span class="variable">$a</span>);</span><br></pre></td></tr></table></figure></p>
+<p>浏览器里post直接传a=1发现成功覆盖了变量a的值<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_02.jpg" alt=""><br>目前看乌云的案例<a href="http://www.wooyun.org/bugs/wooyun-2014-053189" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2014-053189</a>是出现在覆盖表前缀上。<br><strong>$$变量覆盖</strong><br>原理其实跟上面一样，有个很经典的$$变量覆盖的代码：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="variable">$a</span>=<span class="number">22333</span>;</span><br><span class="line"><span class="keyword">foreach</span>(<span class="keyword">array</span>(<span class="string">'_COOKIE'</span>,<span class="string">'_POST'</span>,<span class="string">'_GET'</span>) <span class="keyword">as</span> <span class="variable">$_request</span>)&#123;</span><br><span class="line">	<span class="keyword">foreach</span>(<span class="variable">$$_request</span> <span class="keyword">as</span> <span class="variable">$_key</span>=&gt;<span class="variable">$_value</span>)&#123;</span><br><span class="line">		<span class="variable">$$_key</span> = addslashes(<span class="variable">$_value</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$a</span>;</span><br></pre></td></tr></table></figure></p>
+<p>测试发现成功覆盖了变量a<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_03.jpg" alt=""><br>案例：<a href="http://www.wooyun.org/bugs/wooyun-2010-055338" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2010-055338</a></p>
 <p>本文由HackBraid整理总结，原文链接：<a href="http://www.cnbraid.com/2016/05/10/sql6/">http://www.cnbraid.com/2016/05/10/sql6/</a>，如需转载请联系作者。</p>
 
       
@@ -530,7 +535,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_背景"><span class="nav-number">1.</span> <span class="nav-text">0x01 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_漏洞分析"><span class="nav-number">2.</span> <span class="nav-text">0x02 漏洞分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FILES注入"><span class="nav-number">2.1.</span> <span class="nav-text">FILES注入</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_背景"><span class="nav-number">1.</span> <span class="nav-text">0x01 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_漏洞分析"><span class="nav-number">2.</span> <span class="nav-text">0x02 漏洞分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FILES注入"><span class="nav-number">2.1.</span> <span class="nav-text">FILES注入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#变量覆盖"><span class="nav-number">2.2.</span> <span class="nav-text">变量覆盖</span></a></li></ol></li></ol></div>
             
           </div>
         </section>
