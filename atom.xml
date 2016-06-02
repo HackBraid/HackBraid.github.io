@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title>Braid&#39;s Blog - 阅尽天下代码，心中自然无码</title>
+  <title>Braid&#39;s Blog</title>
   <subtitle>攻城狮，黑客，网络安全爱好者</subtitle>
   <link href="/atom.xml" rel="self"/>
   
