@@ -97,7 +97,7 @@ Insert into table (username) values (‘hack\’’);
 Insert into table (username) values (‘hack\’’);
 
 这样入库后转义符就会消失变成了">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sqlbypass2.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_02.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_04.png">
@@ -105,7 +105,7 @@ Insert into table (username) values (‘hack\’’);
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_06.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_07.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_08.png">
-<meta property="og:updated_time" content="2016-05-11T03:18:14.874Z">
+<meta property="og:updated_time" content="2016-06-03T02:02:35.824Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 4.全局防护Bypass之二次注入">
 <meta name="twitter:description" content="0x01 背景现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。二次注入也是一种比较常见的注入，它涉及到入库和出库。因为有全局转义所以入库的时候：
@@ -348,7 +348,7 @@ Insert into table (username) values (‘hack\’’);
 <blockquote>
 <p>Insert into table (username) values (‘hack\’’);</p>
 </blockquote>
-<p>这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询的话就会成功的引入了单引号导致注入。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-068362" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2014-068362</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png" alt=""><br><a id="more"></a></p>
+<p>这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询的话就会成功的引入了单引号导致注入。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-068362" target="_blank" rel="external">http://www.wooyun.org/bugs/wooyun-2014-068362</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlbypass2.jpg" alt=""><br><a id="more"></a></p>
 <h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>看背景我们使用了低版本的74cms程序，版本为3.4（20140310）<br>①源码网上可以搜到，我打包了一份：<a href="http://pan.baidu.com/s/1c1mLCru" title="74cmsV3.4(20140310).zip" target="_blank" rel="external">http://pan.baidu.com/s/1c1mLCru</a><br>②解压到www的74cms(20140310)目录下，浏览器访问<a href="http://localhost/74cms(20140310" target="_blank" rel="external">http://localhost/74cms(20140310)</a>)，然后按照提示一步步安装即可，安装遇到问题请自行百度或谷歌，成功后访问如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_02.png" alt=""></p>
 <h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><blockquote>
 <p><strong>Part1:源码结构</strong></p>
@@ -474,7 +474,7 @@ Insert into table (username) values (‘hack\’’);
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">10</span>
+              <span class="site-state-item-count">11</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

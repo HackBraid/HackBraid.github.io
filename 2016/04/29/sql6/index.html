@@ -86,15 +86,16 @@
 <meta name="description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～盲点如下：①注入">
 <meta property="og:type" content="article">
 <meta property="og:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
-<meta property="og:url" content="http://www.cnbraid.com/2016/04/29/sql5/index.html">
+<meta property="og:url" content="http://www.cnbraid.com/2016/04/29/sql6/index.html">
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～盲点如下：①注入">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian1.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_01.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_02.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql05_3.png">
-<meta property="og:updated_time" content="2016-05-11T03:19:13.009Z">
+<meta property="og:updated_time" content="2016-06-03T02:06:20.408Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～盲点如下：①注入">
@@ -297,8 +298,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/29/sql5/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/29/sql5/" itemprop="commentsCount"></span>
+                <a href="/2016/04/29/sql6/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/29/sql6/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -308,7 +309,7 @@
 
           
           
-             <span id="/2016/04/29/sql5/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
+             <span id="/2016/04/29/sql6/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -329,7 +330,7 @@
       
 
       
-        <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～<br><strong>盲点如下：</strong><br>①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；<br>②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；<br>③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。<br>附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE<br><a id="more"></a></p>
+        <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～<br><strong>盲点如下：</strong><br>①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；<br>②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；<br>③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。<br>附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian1.jpg" alt=""><br><a id="more"></a></p>
 <h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>环境请自行搜寻和搭建吧，从这篇开始只做分析不提供漏洞测试环境~~</p>
 <h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><h3 id="完全无视GPC的数字型的注入，其实仔细总结下发现还是很多可以学习的地方。">完全无视GPC的数字型的注入，其实仔细总结下发现还是很多可以学习的地方。</h3><blockquote>
 <p>1.传入的参数未做intval转换、构造的sql语句没有单引号保护</p>
@@ -386,15 +387,15 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/02/28/sql4/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入">
-                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入
+              <a href="/2016/03/15/sql5/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用">
+                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/05/10/sql6/" rel="prev" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
+              <a href="/2016/05/10/sql7/" rel="prev" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
                 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇 <i class="fa fa-chevron-right"></i>
               </a>
             
@@ -422,8 +423,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2016/04/29/sql5/"
-           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇" data-url="http://www.cnbraid.com/2016/04/29/sql5/">
+      <div class="ds-thread" data-thread-key="2016/04/29/sql6/"
+           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇" data-url="http://www.cnbraid.com/2016/04/29/sql6/">
       </div>
     
   </div>
@@ -468,7 +469,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">10</span>
+              <span class="site-state-item-count">11</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

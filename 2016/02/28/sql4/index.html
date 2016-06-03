@@ -89,11 +89,12 @@
 <meta property="og:url" content="http://www.cnbraid.com/2016/02/28/sql4/index.html">
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；2.但如果存在宽字节注入，我们输入%df%27时首先经过上面">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sqlbypass3.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_02.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_03.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql4_01.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql4_02.png">
-<meta property="og:updated_time" content="2016-05-11T03:18:31.202Z">
+<meta property="og:updated_time" content="2016-06-03T02:02:29.306Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入">
 <meta name="twitter:description" content="0x01 背景首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；2.但如果存在宽字节注入，我们输入%df%27时首先经过上面">
@@ -328,8 +329,8 @@
       
 
       
-        <h2 id="0x01_背景">0x01 背景</h2><p>首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：<br>1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；<br>2.但如果存在宽字节注入，我们输入%df%27时首先经过上面提到的单引号转义变成了%df%5c%27（%5c是反斜杠\），之后在数据库查询前由于使用了GBK多字节编码，即在汉字编码范围内两个字节会被编码为一个汉字。然后MySQL服务器会对查询语句进行GBK编码即%df%5c转换成了汉字“運”（注：GBK的汉字编码范围见附录），而单引号逃逸了出来，从而造成了注入漏洞。<br>现在基本上都会将mysql的连接配置为“set character_set_client=binary”来解决这个问题，所以这篇文章将介绍出现在php中因为字符编码导致的注入问题。</p>
-<p><strong>思路来源于FreeBuf：<a href="http://www.freebuf.com/articles/web/31537.html" target="_blank">http://www.freebuf.com/articles/web/31537.html</a></strong><br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-063219" target="_blank">http://www.wooyun.org/bugs/wooyun-2014-063219</a></strong><br><a id="more"></a></p>
+        <h2 id="0x01_背景">0x01 背景</h2><p>首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：<br>1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；<br>2.但如果存在宽字节注入，我们输入%df%27时首先经过上面提到的单引号转义变成了%df%5c%27（%5c是反斜杠\），之后在数据库查询前由于使用了GBK多字节编码，即在汉字编码范围内两个字节会被编码为一个汉字。然后MySQL服务器会对查询语句进行GBK编码即%df%5c转换成了汉字“運”（注：GBK的汉字编码范围见附录），而单引号逃逸了出来，从而造成了注入漏洞。<br>现在基本上都会将mysql的连接配置为“set character_set_client=binary”来解决这个问题，所以这篇文章将介绍出现在php中因为字符编码转换导致的注入问题。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-063219" target="_blank">http://www.wooyun.org/bugs/wooyun-2014-063219</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlbypass3.jpg" alt=""></p>
+<a id="more"></a>
 <h2 id="0x02_环境搭建">0x02 环境搭建</h2><p>看背景我们使用了低版本的74cms程序，版本为3.4（20140310）<br>①源码网上可以搜到，我打包了一份：<a href="http://pan.baidu.com/s/1c1mLCru" title="74cmsV3.4(20140310).zip" target="_blank" rel="external">http://pan.baidu.com/s/1c1mLCru</a><br>②解压到www的74cms(20140310)目录下，浏览器访问<a href="http://localhost/74cms(20140310" target="_blank" rel="external">http://localhost/74cms(20140310)</a>)，然后按照提示一步步安装即可，安装遇到问题请自行百度或谷歌，成功后访问如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_02.png" alt=""></p>
 <h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><blockquote>
 <p><strong>Part1:源码结构</strong></p>
@@ -392,8 +393,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2016/04/29/sql5/" rel="prev" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
-                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇 <i class="fa fa-chevron-right"></i>
+              <a href="/2016/03/15/sql5/" rel="prev" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用">
+                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -466,7 +467,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">10</span>
+              <span class="site-state-item-count">11</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

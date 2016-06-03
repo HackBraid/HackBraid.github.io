@@ -65,7 +65,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="JAVA,多线程,生产者消费者," />
+  <meta name="keywords" content="PHP,SQL注入,代码审计," />
 
 
 
@@ -83,17 +83,22 @@
 
 
 
-<meta name="description" content="0x01 并发协作（生产者消费者模型）对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型">
+<meta name="description" content="0x01 背景PHP程序员在开发过程中难免会使用一些字符替换函数（str_replace）、反转义函数（stripslashes），但这些函数使用位置不当就会绕过全局的防护造成SQL注入漏洞。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Java基于queue的多线程模拟生产者消费者问题">
-<meta property="og:url" content="http://www.cnbraid.com/2015/09/23/producerconsumer/index.html">
+<meta property="og:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用">
+<meta property="og:url" content="http://www.cnbraid.com/2016/03/15/sql5/index.html">
 <meta property="og:site_name" content="Braid's Blog">
-<meta property="og:description" content="0x01 并发协作（生产者消费者模型）对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型">
-<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG">
-<meta property="og:updated_time" content="2016-05-03T05:42:09.432Z">
+<meta property="og:description" content="0x01 背景PHP程序员在开发过程中难免会使用一些字符替换函数（str_replace）、反转义函数（stripslashes），但这些函数使用位置不当就会绕过全局的防护造成SQL注入漏洞。">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/hanshu.jpg">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/bypass09.jpg">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/bypass10.jpg">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/hanshu1.jpg">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/bypass11.jpg">
+<meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/bypass12.jpg">
+<meta property="og:updated_time" content="2016-06-03T01:53:53.729Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Java基于queue的多线程模拟生产者消费者问题">
-<meta name="twitter:description" content="0x01 并发协作（生产者消费者模型）对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型">
+<meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用">
+<meta name="twitter:description" content="0x01 背景PHP程序员在开发过程中难免会使用一些字符替换函数（str_replace）、反转义函数（stripslashes），但这些函数使用位置不当就会绕过全局的防护造成SQL注入漏洞。">
 
 
 
@@ -111,7 +116,7 @@
   };
 </script>
 
-  <title> Java基于queue的多线程模拟生产者消费者问题 | Braid's Blog </title>
+  <title> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用 | Braid's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -251,7 +256,7 @@
             
             
               
-                Java基于queue的多线程模拟生产者消费者问题
+                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用
               
             
           </h1>
@@ -263,8 +268,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-09-23T15:30:00+08:00" content="2015-09-23">
-              2015-09-23
+            <time itemprop="dateCreated" datetime="2016-03-15T10:35:00+08:00" content="2016-03-15">
+              2016-03-15
             </time>
           </span>
 
@@ -277,8 +282,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/编程开发/" itemprop="url" rel="index">
-                    <span itemprop="name">编程开发</span>
+                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
+                    <span itemprop="name">WEB安全</span>
                   </a>
                 </span>
 
@@ -293,8 +298,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2015/09/23/producerconsumer/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/09/23/producerconsumer/" itemprop="commentsCount"></span>
+                <a href="/2016/03/15/sql5/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/15/sql5/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -304,7 +309,7 @@
 
           
           
-             <span id="/2015/09/23/producerconsumer/" class="leancloud_visitors" data-flag-title="Java基于queue的多线程模拟生产者消费者问题">
+             <span id="/2016/03/15/sql5/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -325,9 +330,14 @@
       
 
       
-        <h2 id="0x01_并发协作（生产者消费者模型）">0x01 并发协作（生产者消费者模型）</h2><p>对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。<br>生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。<br>这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG" alt=""><br><a id="more"></a></p>
-<h2 id="0x02_基于Queue的生产者消费者模型实现">0x02 基于Queue的生产者消费者模型实现</h2><figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">package</span> com.thread;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.BlockingQueue;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.LinkedBlockingQueue;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span><br><span class="line"> * java基于queue多线程来模拟生产者消费者问题</span><br><span class="line"> * </span><br><span class="line"> * ProducerConsumer是主类，Producer生产者，Consumer消费者，Queue是商品</span><br><span class="line"> * </span><br><span class="line"> * <span class="doctag">@author</span> braid</span><br><span class="line"> * <span class="doctag">@time</span> 2015-09-23</span><br><span class="line"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ProducerConsumer</span> </span>&#123;</span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">		ProducerConsumer pc = <span class="keyword">new</span> ProducerConsumer();</span><br><span class="line">		BlockingQueue&lt;String&gt; queue = <span class="keyword">new</span> LinkedBlockingQueue&lt;String&gt;(<span class="number">5</span>);</span><br><span class="line">		ExecutorService service = Executors.newCachedThreadPool();</span><br><span class="line">		Producer p = pc.new Producer(<span class="string">"王一"</span>, queue);</span><br><span class="line">		Consumer c = pc.new Consumer(<span class="string">"李二"</span>, queue);</span><br><span class="line">		service.submit(p);</span><br><span class="line">		service.submit(c);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span><br><span class="line">	 * 消费者</span><br><span class="line">	 * </span><br><span class="line">	 * <span class="doctag">@author</span> braid</span><br><span class="line">	 * <span class="doctag">@time</span> 2015-09-23</span><br><span class="line">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">class</span> <span class="title">Consumer</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">		<span class="keyword">private</span> String name;</span><br><span class="line">		<span class="keyword">private</span> BlockingQueue&lt;String&gt; queue = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="title">Consumer</span><span class="params">(String name, BlockingQueue&lt;String&gt; queue)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">this</span>.name = name;</span><br><span class="line">			<span class="keyword">this</span>.queue = queue;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">			<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">				<span class="keyword">if</span> (queue.isEmpty())</span><br><span class="line">					<span class="keyword">break</span>;</span><br><span class="line">				String product;</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					product = queue.take();</span><br><span class="line">					System.out.println(name + <span class="string">"消费商品："</span> + product);</span><br><span class="line">					Thread.sleep(<span class="number">500</span>);</span><br><span class="line">				&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">					<span class="comment">// TODO Auto-generated catch block</span></span><br><span class="line">					e.printStackTrace();</span><br><span class="line">				&#125;</span><br><span class="line"></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/**</span><br><span class="line">	 * 生产者</span><br><span class="line">	 * </span><br><span class="line">	 * <span class="doctag">@author</span> braid</span><br><span class="line">	 * <span class="doctag">@time</span> 2015-09-23</span><br><span class="line">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">class</span> <span class="title">Producer</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">		<span class="keyword">private</span> String name;</span><br><span class="line">		<span class="keyword">private</span> BlockingQueue&lt;String&gt; queue = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="title">Producer</span><span class="params">(String name, BlockingQueue&lt;String&gt; queue)</span> </span>&#123;</span><br><span class="line">			<span class="keyword">this</span>.name = name;</span><br><span class="line">			<span class="keyword">this</span>.queue = queue;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">			<span class="comment">// while(true)会造成阻塞，应该根据实际需要设定条件</span></span><br><span class="line">			<span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">				String product = <span class="string">"product"</span> + (<span class="keyword">int</span>) (Math.random() * <span class="number">10000</span>);</span><br><span class="line">				<span class="keyword">try</span> &#123;</span><br><span class="line">					queue.put(product);</span><br><span class="line">					System.out.println(name + <span class="string">"已生产："</span> + product);</span><br><span class="line">					Thread.sleep(<span class="number">500</span>);</span><br><span class="line">				&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">					<span class="comment">// TODO Auto-generated catch block</span></span><br><span class="line">					e.printStackTrace();</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>本文由HackBraid整理总结，如需转载请注明出处。</p>
+        <h2 id="0x01_背景">0x01 背景</h2><p>PHP程序员在开发过程中难免会使用一些字符替换函数（str_replace）、反转义函数（stripslashes），但这些函数使用位置不当就会绕过全局的防护造成SQL注入漏洞。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/hanshu.jpg" alt=""><br><a id="more"></a></p>
+<h2 id="0x03_漏洞分析">0x03 漏洞分析</h2><h3 id="str_replace函数的错误使用">str_replace函数的错误使用</h3><p>第一种情况是写程序时会使用str_replace函数将参数中的单引号、括号等字符替换为空，这样在一些双条件查询的情况就会引发注入问题。缺陷代码如下：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="keyword">require_once</span>(<span class="string">'common.php'</span>);</span><br><span class="line"><span class="variable">$conn</span> = mysql_connect(<span class="string">'localhost'</span>, <span class="string">'root'</span>, <span class="string">'braid'</span>) <span class="keyword">or</span> <span class="keyword">die</span>(<span class="string">'bad!'</span>);</span><br><span class="line">mysql_query(<span class="string">"SET NAMES binary'"</span>);</span><br><span class="line">mysql_select_db(<span class="string">'test'</span>, <span class="variable">$conn</span>) <span class="keyword">OR</span> emMsg(<span class="string">"数据库连接失败"</span>);</span><br><span class="line"><span class="variable">$tmp_id</span> = <span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">'id'</span>]) ? <span class="variable">$_GET</span>[<span class="string">'id'</span>] : <span class="number">1</span>;</span><br><span class="line"><span class="variable">$title</span> = <span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">'title'</span>]) ? <span class="variable">$_GET</span>[<span class="string">'title'</span>] : <span class="string">'news title'</span>;</span><br><span class="line"><span class="comment">//程序编写时直接用str_replace去掉id里的单引号</span></span><br><span class="line"><span class="variable">$id</span> = str_replace(<span class="string">"'"</span>,<span class="string">''</span>,<span class="variable">$tmp_id</span>);</span><br><span class="line"><span class="comment">//sql查询语句通过id和titile两个条件进行查询</span></span><br><span class="line"><span class="variable">$sql</span> = <span class="string">"SELECT * FROM news WHERE id='&#123;$id&#125;' and title='&#123;$title&#125;'"</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$sql</span>;</span><br><span class="line"><span class="variable">$result</span> = mysql_query(<span class="variable">$sql</span>, <span class="variable">$conn</span>) <span class="keyword">or</span> <span class="keyword">die</span>(mysql_error()); </span><br><span class="line"><span class="preprocessor">?&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>浏览器输入”<a href="http://localhost/sqltest/streplace.php?id=1&#39;&amp;title=news" target="_blank" rel="external">http://localhost/sqltest/streplace.php?id=1&#39;&amp;title=news</a> title”，发现报错了，我们直接打印出执行的sql语句如下图：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/bypass09.jpg" alt=""><br>发现参数id右边的单引号被反斜杠转义成字符了，说明又可以注入了。<br>简单分析下上面id参数的执行过程，-1’经过addslashes函数转义后变成了-1\’，然后再经过str_replace函数干掉了单引号变成了-1\，最后带入查询的语句才是下面这样：</p>
+<pre><code><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> news <span class="keyword">WHERE</span> id=<span class="string">'1\'</span> <span class="keyword">and</span> title=<span class="string">'news title'</span>
+</code></pre><p>反斜杠转义了sql查询语句里id后面那个单引号，导致title参数可以构造sql注入语句了，我们直接构造获取管理员账户密码的语句”<a href="http://localhost/sqltest/streplace.php?id=-1&#39;&amp;title=union" target="_blank" rel="external">http://localhost/sqltest/streplace.php?id=-1&#39;&amp;title=union</a> select 1,2,concat(name,0x23,pass) from admin%23”<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/bypass10.jpg" alt=""><br>第二种情况是str_replace函数是用户可控的，就是说用户想把啥替换成空就可以将什么替换为空。<br>首先我们先看看addslashes函数对%00-%ff的转义情况，经过fuzz发现%00会被转义为\0，如下：<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/hanshu1.jpg" alt=""><br>那么注入的时候我们提交%00’，经过addlashes就会变为\0\’，这时候我们用replace函数替换0为空就变成了\‘，成功转义了转义字符让单引号逃逸出来，从而造成注入漏洞。</p>
+<h3 id="stripslashes函数的错误使用">stripslashes函数的错误使用</h3><p>这个函数的定义是删除由 addslashes() 函数添加的反斜杠，所以很明显使用不当的话就会引发SQL注入。缺陷代码如下：<br><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="preprocessor">&lt;?php</span></span><br><span class="line"><span class="keyword">require_once</span>(<span class="string">'common.php'</span>);</span><br><span class="line"><span class="variable">$conn</span> = mysql_connect(<span class="string">'localhost'</span>, <span class="string">'root'</span>, <span class="string">'braid'</span>) <span class="keyword">or</span> <span class="keyword">die</span>(<span class="string">'bad!'</span>);</span><br><span class="line">mysql_query(<span class="string">"SET NAMES binary'"</span>);</span><br><span class="line">mysql_select_db(<span class="string">'test'</span>, <span class="variable">$conn</span>) <span class="keyword">OR</span> emMsg(<span class="string">"数据库连接失败"</span>);</span><br><span class="line"><span class="variable">$tmp_id</span> = <span class="keyword">isset</span>(<span class="variable">$_GET</span>[<span class="string">'id'</span>]) ? <span class="variable">$_GET</span>[<span class="string">'id'</span>] : <span class="number">1</span>;</span><br><span class="line"><span class="variable">$id</span> = stripslashes(<span class="variable">$tmp_id</span>);</span><br><span class="line"><span class="variable">$sql</span> = <span class="string">"SELECT * FROM news WHERE id='&#123;$id&#125;'"</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="variable">$sql</span>.<span class="string">'&lt;br /&gt;'</span>;</span><br><span class="line"><span class="variable">$result</span> = mysql_query(<span class="variable">$sql</span>, <span class="variable">$conn</span>) <span class="keyword">or</span> <span class="keyword">die</span>(mysql_error()); </span><br><span class="line"><span class="preprocessor">?&gt;</span></span><br></pre></td></tr></table></figure></p>
+<p>浏览器输入”<a href="http://localhost/sqltest/stripslashes.php?id=-1&#39;&quot;，发现报错了，echo出执行的sql语句如下图：" target="_blank" rel="external">http://localhost/sqltest/stripslashes.php?id=-1&#39;&quot;，发现报错了，echo出执行的sql语句如下图：</a><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/bypass11.jpg" alt=""><br>分析下参数id的执行过程，-1’经过addslashes函数转义后变成了-1\’，然后再经过stripslashes函数干掉了反斜杠变成了-1’，所以又可以愉快的注入了。<br>获取管理员账户密码的语句”<a href="http://localhost/sqltest/stripslashes.php?id=-1" target="_blank" rel="external">http://localhost/sqltest/stripslashes.php?id=-1</a>‘ union select 1,2,concat(name,0x23,pass) from admin%23”<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/bypass12.jpg" alt=""></p>
+<p>本文由HackBraid整理总结，原文链接：<a href="http://www.cnbraid.com/2016/02/28/sql4/">http://www.cnbraid.com/2016/02/28/sql4/</a>，如需转载请联系作者。</p>
 
       
     </div>
@@ -342,11 +352,11 @@
       
         <div class="post-tags">
           
-            <a href="/tags/JAVA/" rel="tag">#JAVA</a>
+            <a href="/tags/PHP/" rel="tag">#PHP</a>
           
-            <a href="/tags/多线程/" rel="tag">#多线程</a>
+            <a href="/tags/SQL注入/" rel="tag">#SQL注入</a>
           
-            <a href="/tags/生产者消费者/" rel="tag">#生产者消费者</a>
+            <a href="/tags/代码审计/" rel="tag">#代码审计</a>
           
         </div>
       
@@ -355,16 +365,16 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2015/07/09/fckeditor/" rel="next" title="FCKeditor上传漏洞总结">
-                <i class="fa fa-chevron-left"></i> FCKeditor上传漏洞总结
+              <a href="/2016/02/28/sql4/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入">
+                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 5.全局防护Bypass之宽字节注入
               </a>
             
           </div>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2015/12/16/svnExtract/" rel="prev" title="Java基于queue的多线程提取SVN信息泄露程序">
-                Java基于queue的多线程提取SVN信息泄露程序 <i class="fa fa-chevron-right"></i>
+              <a href="/2016/04/29/sql6/" rel="prev" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
+                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -391,8 +401,8 @@
           
   <div class="comments" id="comments">
     
-      <div class="ds-thread" data-thread-key="2015/09/23/producerconsumer/"
-           data-title="Java基于queue的多线程模拟生产者消费者问题" data-url="http://www.cnbraid.com/2015/09/23/producerconsumer/">
+      <div class="ds-thread" data-thread-key="2016/03/15/sql5/"
+           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用" data-url="http://www.cnbraid.com/2016/03/15/sql5/">
       </div>
     
   </div>
@@ -529,7 +539,7 @@
               
             
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_并发协作（生产者消费者模型）"><span class="nav-number">1.</span> <span class="nav-text">0x01 并发协作（生产者消费者模型）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_基于Queue的生产者消费者模型实现"><span class="nav-number">2.</span> <span class="nav-text">0x02 基于Queue的生产者消费者模型实现</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_背景"><span class="nav-number">1.</span> <span class="nav-text">0x01 背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_漏洞分析"><span class="nav-number">2.</span> <span class="nav-text">0x03 漏洞分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#str_replace函数的错误使用"><span class="nav-number">2.1.</span> <span class="nav-text">str_replace函数的错误使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stripslashes函数的错误使用"><span class="nav-number">2.2.</span> <span class="nav-text">stripslashes函数的错误使用</span></a></li></ol></li></ol></div>
             
           </div>
         </section>

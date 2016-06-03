@@ -252,7 +252,7 @@
             
               
                 
-                <a class="post-title-link" href="/2016/05/10/sql6/" itemprop="url">
+                <a class="post-title-link" href="/2016/05/10/sql7/" itemprop="url">
                   【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇
                 </a>
               
@@ -296,8 +296,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/05/10/sql6/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/10/sql6/" itemprop="commentsCount"></span>
+                <a href="/2016/05/10/sql7/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/10/sql7/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -307,7 +307,7 @@
 
           
           
-             <span id="/2016/05/10/sql6/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
+             <span id="/2016/05/10/sql7/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -329,9 +329,9 @@
 
       
         
-          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇<a href="http://www.cnbraid.com/2016/04/29/sql5/">http://www.cnbraid.com/2016/04/29/sql5/</a>，这里介绍另外两种情况。<br><strong>盲点如下：</strong><br>①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；<br>②变量覆盖，危险函数：extract()、parse_str()、$$。<br>
+          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇<a href="http://www.cnbraid.com/2016/04/29/sql5/">http://www.cnbraid.com/2016/04/29/sql5/</a>，这里介绍另外两种情况。<br><strong>盲点如下：</strong><br>①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；<br>②变量覆盖，危险函数：extract()、parse_str()、$$。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian2.jpg" alt=""><br>
           <div class="post-more-link text-center">
-            <a class="btn" href="/2016/05/10/sql6/#more" rel="contents">
+            <a class="btn" href="/2016/05/10/sql7/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -378,7 +378,7 @@
             
               
                 
-                <a class="post-title-link" href="/2016/04/29/sql5/" itemprop="url">
+                <a class="post-title-link" href="/2016/04/29/sql6/" itemprop="url">
                   【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇
                 </a>
               
@@ -422,8 +422,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2016/04/29/sql5/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/29/sql5/" itemprop="commentsCount"></span>
+                <a href="/2016/04/29/sql6/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/04/29/sql6/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -433,7 +433,7 @@
 
           
           
-             <span id="/2016/04/29/sql5/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
+             <span id="/2016/04/29/sql6/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -455,9 +455,135 @@
 
       
         
-          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～<br><strong>盲点如下：</strong><br>①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；<br>②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；<br>③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。<br>附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE<br>
+          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～<br><strong>盲点如下：</strong><br>①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；<br>②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；<br>③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。<br>附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian1.jpg" alt=""><br>
           <div class="post-more-link text-center">
-            <a class="btn" href="/2016/04/29/sql5/#more" rel="contents">
+            <a class="btn" href="/2016/04/29/sql6/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/03/15/sql5/" itemprop="url">
+                  【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-03-15T10:35:00+08:00" content="2016-03-15">
+              2016-03-15
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
+                    <span itemprop="name">WEB安全</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/03/15/sql5/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/03/15/sql5/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2016/03/15/sql5/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="0x01_背景">0x01 背景</h2><p>PHP程序员在开发过程中难免会使用一些字符替换函数（str_replace）、反转义函数（stripslashes），但这些函数使用位置不当就会绕过全局的防护造成SQL注入漏洞。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/hanshu.jpg" alt=""><br>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/03/15/sql5/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -581,8 +707,7 @@
 
       
         
-          <h2 id="0x01_背景">0x01 背景</h2><p>首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：<br>1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；<br>2.但如果存在宽字节注入，我们输入%df%27时首先经过上面提到的单引号转义变成了%df%5c%27（%5c是反斜杠\），之后在数据库查询前由于使用了GBK多字节编码，即在汉字编码范围内两个字节会被编码为一个汉字。然后MySQL服务器会对查询语句进行GBK编码即%df%5c转换成了汉字“運”（注：GBK的汉字编码范围见附录），而单引号逃逸了出来，从而造成了注入漏洞。<br>现在基本上都会将mysql的连接配置为“set character_set_client=binary”来解决这个问题，所以这篇文章将介绍出现在php中因为字符编码导致的注入问题。</p>
-<p><strong>思路来源于FreeBuf：<a href="http://www.freebuf.com/articles/web/31537.html" target="_blank">http://www.freebuf.com/articles/web/31537.html</a></strong><br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-063219" target="_blank">http://www.wooyun.org/bugs/wooyun-2014-063219</a></strong><br>
+          <h2 id="0x01_背景">0x01 背景</h2><p>首先我们了解下宽字节注入，宽字节注入源于程序员设置MySQL连接时错误配置为：set character_set_client=gbk，这样配置会引发编码转换从而导致的注入漏洞。具体原理如下：<br>1.正常情况下当GPC开启或使用addslashes函数过滤GET或POST提交的参数时，黑客使用的单引号 ‘ 就会被转义为: \’；<br>2.但如果存在宽字节注入，我们输入%df%27时首先经过上面提到的单引号转义变成了%df%5c%27（%5c是反斜杠\），之后在数据库查询前由于使用了GBK多字节编码，即在汉字编码范围内两个字节会被编码为一个汉字。然后MySQL服务器会对查询语句进行GBK编码即%df%5c转换成了汉字“運”（注：GBK的汉字编码范围见附录），而单引号逃逸了出来，从而造成了注入漏洞。<br>现在基本上都会将mysql的连接配置为“set character_set_client=binary”来解决这个问题，所以这篇文章将介绍出现在php中因为字符编码转换导致的注入问题。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-063219" target="_blank">http://www.wooyun.org/bugs/wooyun-2014-063219</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlbypass3.jpg" alt=""></p>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/02/28/sql4/#more" rel="contents">
               阅读全文 &raquo;
@@ -712,135 +837,9 @@
 <blockquote>
 <p>Insert into table (username) values (‘hack\’’);</p>
 </blockquote>
-<p>这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询的话就会成功的引入了单引号导致注入。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-068362">http://www.wooyun.org/bugs/wooyun-2014-068362</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql3_001.png" alt=""><br>
+<p>这样入库后转义符就会消失变成了hack’，这样如果hack’出库被带入查询的话就会成功的引入了单引号导致注入。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-068362">http://www.wooyun.org/bugs/wooyun-2014-068362</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlbypass2.jpg" alt=""><br>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/02/19/sql3/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/02/18/sql2/" itemprop="url">
-                  【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-02-18T10:35:00+08:00" content="2016-02-18">
-              2016-02-18
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
-                    <span itemprop="name">WEB安全</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/02/18/sql2/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/02/18/sql2/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-             <span id="/2016/02/18/sql2/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 3.全局防护Bypass之Base64Decode">
-               &nbsp; | &nbsp;
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               <span class="post-meta-item-text">阅读次数 </span>
-               <span class="leancloud-visitors-count"></span>
-              </span>
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。同上一篇，我们需要找一些编码解码的函数来绕过全局防护，本篇介绍base64decode()的情况。<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-050338">http://www.wooyun.org/bugs/wooyun-2014-050338</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sql02_05.jpg" alt=""><br>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/02/18/sql2/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -870,7 +869,7 @@
 
   
   <nav class="pagination">
-    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -911,7 +910,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">10</span>
+              <span class="site-state-item-count">11</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
