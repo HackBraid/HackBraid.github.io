@@ -85,7 +85,7 @@
 
 <meta name="description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
 <meta property="og:type" content="article">
-<meta property="og:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
+<meta property="og:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇">
 <meta property="og:url" content="http://www.cnbraid.com/2016/05/10/sql7/index.html">
 <meta property="og:site_name" content="Braid's Blog">
 <meta property="og:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
@@ -93,9 +93,9 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_02.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_03.jpg">
-<meta property="og:updated_time" content="2016-06-03T02:07:34.174Z">
+<meta property="og:updated_time" content="2016-06-03T02:10:51.337Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
+<meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/04/29/sql5/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
 
 
@@ -114,7 +114,7 @@
   };
 </script>
 
-  <title> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇 | Braid's Blog </title>
+  <title> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇 | Braid's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -254,7 +254,7 @@
             
             
               
-                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇
+                【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇
               
             
           </h1>
@@ -307,7 +307,7 @@
 
           
           
-             <span id="/2016/05/10/sql7/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇">
+             <span id="/2016/05/10/sql7/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -366,8 +366,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/04/29/sql6/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇">
-                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护盲点的总结上篇
+              <a href="/2016/04/29/sql6/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结上篇">
+                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结上篇
               </a>
             
           </div>
@@ -399,7 +399,7 @@
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2016/05/10/sql7/"
-           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结下篇" data-url="http://www.cnbraid.com/2016/05/10/sql7/">
+           data-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇" data-url="http://www.cnbraid.com/2016/05/10/sql7/">
       </div>
     
   </div>
