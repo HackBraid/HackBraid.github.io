@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-06-03T02:10:51.337Z</updated>
+  <updated>2016-06-06T05:26:29.019Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇</title>
-    <link href="http://www.cnbraid.com/2016/05/10/sql7/"/>
-    <id>http://www.cnbraid.com/2016/05/10/sql7/</id>
-    <published>2016-05-10T02:35:00.000Z</published>
-    <updated>2016-06-03T02:10:51.337Z</updated>
+    <link href="http://www.cnbraid.com/2016/05/31/sql7/"/>
+    <id>http://www.cnbraid.com/2016/05/31/sql7/</id>
+    <published>2016-05-31T02:35:00.000Z</published>
+    <updated>2016-06-06T05:26:29.019Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇&lt;a href=&quot;http://www.cnbraid.com/2016/04/29/sql5/&quot;&gt;http://www.cnbraid.com/2016/04/29/sql5/&lt;/a&gt;，这里介绍另外两种情况。&lt;br&gt;&lt;strong&gt;盲点如下：&lt;/strong&gt;&lt;br&gt;①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；&lt;br&gt;②变量覆盖，危险函数：extract()、parse_str()、$$。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian2.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_漏洞分析&quot;&gt;0x02 漏洞分析&lt;/h2&gt;&lt;h3 id=&quot;FILES注入&quot;&gt;FILES注入&lt;/h3&gt;&lt;p&gt;FILES注入一般情况是是因为上传时把上传的名字带到insert入库产生的，这里看下tipask问答系统&lt;br&gt;首先看看它的全局防护是怎么处理的：&lt;br&gt;&lt;figure class=&quot;highlight php&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;index.php里:&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;include&lt;/span&gt; TIPASK_ROOT . &lt;span class=&quot;string&quot;&gt;&#39;/model/tipask.class.php&#39;&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$tipask&lt;/span&gt; = &lt;span class=&quot;keyword&quot;&gt;new&lt;/span&gt; tipask();&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$tipask&lt;/span&gt;-&amp;gt;run();&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;... ...&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;跟进到/model/tipask.class.php里:&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;function&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;title&quot;&gt;init_request&lt;/span&gt;&lt;span class=&quot;params&quot;&gt;()&lt;/span&gt; &lt;/span&gt;&amp;#123;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;... ...&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;variable&quot;&gt;$this&lt;/span&gt;-&amp;gt;get = taddslashes(&lt;span class=&quot;variable&quot;&gt;$this&lt;/span&gt;-&amp;gt;get, &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;variable&quot;&gt;$this&lt;/span&gt;-&amp;gt;post = taddslashes(array_merge(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt;));&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        checkattack(&lt;span class=&quot;variable&quot;&gt;$this&lt;/span&gt;-&amp;gt;post, &lt;span class=&quot;string&quot;&gt;&#39;post&#39;&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        checkattack(&lt;span class=&quot;variable&quot;&gt;$this&lt;/span&gt;-&amp;gt;get, &lt;span class=&quot;string&quot;&gt;&#39;get&#39;&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;        &lt;span class=&quot;keyword&quot;&gt;unset&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_POST&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;    &amp;#125;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
@@ -54,10 +54,10 @@
   
   <entry>
     <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结上篇</title>
-    <link href="http://www.cnbraid.com/2016/04/29/sql6/"/>
-    <id>http://www.cnbraid.com/2016/04/29/sql6/</id>
-    <published>2016-04-29T02:35:00.000Z</published>
-    <updated>2016-06-03T02:10:45.971Z</updated>
+    <link href="http://www.cnbraid.com/2016/05/10/sql6/"/>
+    <id>http://www.cnbraid.com/2016/05/10/sql6/</id>
+    <published>2016-05-10T02:35:00.000Z</published>
+    <updated>2016-06-06T05:26:15.051Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～&lt;br&gt;&lt;strong&gt;盲点如下：&lt;/strong&gt;&lt;br&gt;①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；&lt;br&gt;②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；&lt;br&gt;③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。&lt;br&gt;附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian1.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_环境搭建&quot;&gt;0x02 环境搭建&lt;/h2&gt;&lt;p&gt;环境请自行搜寻和搭建吧，从这篇开始只做分析不提供漏洞测试环境~~&lt;/p&gt;
@@ -110,10 +110,10 @@
   
   <entry>
     <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用</title>
-    <link href="http://www.cnbraid.com/2016/03/15/sql5/"/>
-    <id>http://www.cnbraid.com/2016/03/15/sql5/</id>
-    <published>2016-03-15T02:35:00.000Z</published>
-    <updated>2016-06-03T01:53:53.729Z</updated>
+    <link href="http://www.cnbraid.com/2016/04/29/sql5/"/>
+    <id>http://www.cnbraid.com/2016/04/29/sql5/</id>
+    <published>2016-04-29T02:35:00.000Z</published>
+    <updated>2016-06-06T05:26:09.821Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_背景&quot;&gt;0x01 背景&lt;/h2&gt;&lt;p&gt;PHP程序员在开发过程中难免会使用一些字符替换函数（str_replace）、反转义函数（stripslashes），但这些函数使用位置不当就会绕过全局的防护造成SQL注入漏洞。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/hanshu.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x03_漏洞分析&quot;&gt;0x03 漏洞分析&lt;/h2&gt;&lt;h3 id=&quot;str_replace函数的错误使用&quot;&gt;str_replace函数的错误使用&lt;/h3&gt;&lt;p&gt;第一种情况是写程序时会使用str_replace函数将参数中的单引号、括号等字符替换为空，这样在一些双条件查询的情况就会引发注入问题。缺陷代码如下：&lt;br&gt;&lt;figure class=&quot;highlight php&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;preprocessor&quot;&gt;&amp;lt;?php&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;require_once&lt;/span&gt;(&lt;span class=&quot;string&quot;&gt;&#39;common.php&#39;&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$conn&lt;/span&gt; = mysql_connect(&lt;span class=&quot;string&quot;&gt;&#39;localhost&#39;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&#39;root&#39;&lt;/span&gt;, &lt;span class=&quot;string&quot;&gt;&#39;braid&#39;&lt;/span&gt;) &lt;span class=&quot;keyword&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;die&lt;/span&gt;(&lt;span class=&quot;string&quot;&gt;&#39;bad!&#39;&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;mysql_query(&lt;span class=&quot;string&quot;&gt;&quot;SET NAMES binary&#39;&quot;&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;mysql_select_db(&lt;span class=&quot;string&quot;&gt;&#39;test&#39;&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$conn&lt;/span&gt;) &lt;span class=&quot;keyword&quot;&gt;OR&lt;/span&gt; emMsg(&lt;span class=&quot;string&quot;&gt;&quot;数据库连接失败&quot;&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$tmp_id&lt;/span&gt; = &lt;span class=&quot;keyword&quot;&gt;isset&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;id&#39;&lt;/span&gt;]) ? &lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;id&#39;&lt;/span&gt;] : &lt;span class=&quot;number&quot;&gt;1&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$title&lt;/span&gt; = &lt;span class=&quot;keyword&quot;&gt;isset&lt;/span&gt;(&lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;title&#39;&lt;/span&gt;]) ? &lt;span class=&quot;variable&quot;&gt;$_GET&lt;/span&gt;[&lt;span class=&quot;string&quot;&gt;&#39;title&#39;&lt;/span&gt;] : &lt;span class=&quot;string&quot;&gt;&#39;news title&#39;&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;//程序编写时直接用str_replace去掉id里的单引号&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$id&lt;/span&gt; = str_replace(&lt;span class=&quot;string&quot;&gt;&quot;&#39;&quot;&lt;/span&gt;,&lt;span class=&quot;string&quot;&gt;&#39;&#39;&lt;/span&gt;,&lt;span class=&quot;variable&quot;&gt;$tmp_id&lt;/span&gt;);&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;comment&quot;&gt;//sql查询语句通过id和titile两个条件进行查询&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$sql&lt;/span&gt; = &lt;span class=&quot;string&quot;&gt;&quot;SELECT * FROM news WHERE id=&#39;&amp;#123;$id&amp;#125;&#39; and title=&#39;&amp;#123;$title&amp;#125;&#39;&quot;&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;keyword&quot;&gt;echo&lt;/span&gt; &lt;span class=&quot;variable&quot;&gt;$sql&lt;/span&gt;;&lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;variable&quot;&gt;$result&lt;/span&gt; = mysql_query(&lt;span class=&quot;variable&quot;&gt;$sql&lt;/span&gt;, &lt;span class=&quot;variable&quot;&gt;$conn&lt;/span&gt;) &lt;span class=&quot;keyword&quot;&gt;or&lt;/span&gt; &lt;span class=&quot;keyword&quot;&gt;die&lt;/span&gt;(mysql_error()); &lt;/span&gt;&lt;br&gt;&lt;span class=&quot;line&quot;&gt;&lt;span class=&quot;preprocessor&quot;&gt;?&amp;gt;&lt;/span&gt;&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;&lt;/p&gt;
