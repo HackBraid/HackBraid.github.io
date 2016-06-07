@@ -329,7 +329,7 @@
 
       
         
-          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇<a href="http://www.cnbraid.com/2016/04/29/sql5/">http://www.cnbraid.com/2016/04/29/sql5/</a>，这里介绍另外两种情况。<br><strong>盲点如下：</strong><br>①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；<br>②变量覆盖，危险函数：extract()、parse_str()、$$。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian2.jpg" alt=""><br>
+          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇<a href="http://www.cnbraid.com/2016/05/10/sql6/">http://www.cnbraid.com/2016/05/10/sql6/</a>，这里介绍另外两种情况。<br><strong>盲点如下：</strong><br>①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；<br>②变量覆盖，危险函数：extract()、parse_str()、$$。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian2.jpg" alt=""><br>
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/05/31/sql7/#more" rel="contents">
               阅读全文 &raquo;
