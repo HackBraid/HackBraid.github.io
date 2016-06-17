@@ -65,7 +65,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="Windows,tomcat,加固,服务器," />
 
 
 
@@ -83,15 +83,28 @@
 
 
 
-<meta name="description" content="web | security | java | php | python">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Braid's Blog">
-<meta property="og:url" content="http://www.cnbraid.com/page/3/index.html">
+<meta name="description" content="0x00 Tomcat简介tomcat是一个开源Web服务器，基于Tomcat的Web运行效率高，可以在一般的硬件平台上流畅运行，因此，颇受Web站长的青睐。不过，在默认配置下其存在一定的安全隐患，可被恶意攻击。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Windows下tomcat安全配置">
+<meta property="og:url" content="http://www.cnbraid.com/2016/06/17/tomcat安全配置/index.html">
 <meta property="og:site_name" content="Braid's Blog">
-<meta property="og:description" content="web | security | java | php | python">
+<meta property="og:description" content="0x00 Tomcat简介tomcat是一个开源Web服务器，基于Tomcat的Web运行效率高，可以在一般的硬件平台上流畅运行，因此，颇受Web站长的青睐。不过，在默认配置下其存在一定的安全隐患，可被恶意攻击。">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440190493.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440294106.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440250032.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440248016.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440279290.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440219147.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440298603.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440273000.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440329796.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440328686.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440373699.png">
+<meta property="og:image" content="http://static.wooyun.org//drops/20150909/2015090908440348885.png">
+<meta property="og:updated_time" content="2016-06-17T04:41:19.102Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Braid's Blog">
-<meta name="twitter:description" content="web | security | java | php | python">
+<meta name="twitter:title" content="Windows下tomcat安全配置">
+<meta name="twitter:description" content="0x00 Tomcat简介tomcat是一个开源Web服务器，基于Tomcat的Web运行效率高，可以在一般的硬件平台上流畅运行，因此，颇受Web站长的青睐。不过，在默认配置下其存在一定的安全隐患，可被恶意攻击。">
 
 
 
@@ -109,7 +122,7 @@
   };
 </script>
 
-  <title> Braid's Blog </title>
+  <title> Windows下tomcat安全配置 | Braid's Blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -130,9 +143,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left 
-   page-home 
- ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -229,9 +240,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
   
@@ -251,10 +262,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2015/12/16/svnExtract/" itemprop="url">
-                  Java基于queue的多线程提取SVN信息泄露程序
-                </a>
+                Windows下tomcat安全配置
               
             
           </h1>
@@ -266,8 +274,8 @@
               <i class="fa fa-calendar-o"></i>
             </span>
             <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-12-16T17:35:00+08:00" content="2015-12-16">
-              2015-12-16
+            <time itemprop="dateCreated" datetime="2016-06-17T10:39:50+08:00" content="2016-06-17">
+              2016-06-17
             </time>
           </span>
 
@@ -280,8 +288,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/编程开发/" itemprop="url" rel="index">
-                    <span itemprop="name">编程开发</span>
+                  <a href="/categories/安全加固/" itemprop="url" rel="index">
+                    <span itemprop="name">安全加固</span>
                   </a>
                 </span>
 
@@ -296,8 +304,8 @@
             
               <span class="post-comments-count">
                 &nbsp; | &nbsp;
-                <a href="/2015/12/16/svnExtract/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/16/svnExtract/" itemprop="commentsCount"></span>
+                <a href="/2016/06/17/tomcat安全配置/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/06/17/tomcat安全配置/" itemprop="commentsCount"></span>
                 </a>
               </span>
             
@@ -307,7 +315,7 @@
 
           
           
-             <span id="/2015/12/16/svnExtract/" class="leancloud_visitors" data-flag-title="Java基于queue的多线程提取SVN信息泄露程序">
+             <span id="/2016/06/17/tomcat安全配置/" class="leancloud_visitors" data-flag-title="Windows下tomcat安全配置">
                &nbsp; | &nbsp;
                <span class="post-meta-item-icon">
                  <i class="fa fa-eye"></i>
@@ -328,294 +336,98 @@
       
 
       
-        
-          <h2 id="0x01_背景">0x01 背景</h2><p>引上一篇博文，对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个多线程提取SVN信息泄露漏洞的程序。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/svn.png" alt=""><br>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2015/12/16/svnExtract/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
+        <h2 id="0x00_Tomcat简介">0x00 Tomcat简介</h2><p>tomcat是一个开源Web服务器，基于Tomcat的Web运行效率高，可以在一般的硬件平台上流畅运行，因此，颇受Web站长的青睐。不过，在默认配置下其存在一定的安全隐患，可被恶意攻击。<br><a id="more"></a></p>
+<h2 id="0x01_测试环境">0x01 测试环境</h2><p>Win2003<br>Tomcat6.0.18 安装版</p>
+<h2 id="0x02_安全验证">0x02 安全验证</h2><p>一.登陆后台</p>
+<p>首先在win2003上部署Tomcat,一切保持默认。</p>
+<p>Tomcat的默认后台地址为:<a href="http://域名:端口/manager/html.进入之后弹出登陆对话框,Tomcat默认的用户名admin,密码为空。" target="_blank" rel="external">http://域名:端口/manager/html.进入之后弹出登陆对话框,Tomcat默认的用户名admin,密码为空。</a></p>
+<p>Tomcat的一些弱口令:</p>
+<blockquote>
+<p>tomcat tomcat<br>admin 空<br>admin admin<br>admin 123456</p>
+</blockquote>
+<p><img src="http://static.wooyun.org//drops/20150909/2015090908440190493.png" alt=""><br>然后来看一下Tomcat安装版默认的tomacat-users.xml配置文件<br><img src="http://static.wooyun.org//drops/20150909/2015090908440294106.png" alt=""><br>注：Linux平台及Windows平台免安装版本不受该漏洞影响。</p>
+<p>二.获取Webshell</p>
+<p>在Tomcat的后台有个WAR file to deploy模块，通过其可以上传WAR文件。Tomcat可以解析WAR文件，能够将其解压并生成web文件。<br><img src="http://static.wooyun.org//drops/20150909/2015090908440250032.png" alt=""><br>我们将一个jsp格式的webshell用WinRar打包然后将其后缀改名为WAR(本例为no.war)，这样;一个WAR包就生成了。最后将其上传到服务器，可以看到在Tomcat的后台中多了一个名为/no的目录。<br><img src="http://static.wooyun.org//drops/20150909/2015090908440248016.png" alt=""><br>点击该目录打开该目录jsp木马就运行了，这样就获得了一个Webshell。<br><img src="http://static.wooyun.org//drops/20150909/2015090908440279290.png" alt=""></p>
+<p>三.获取服务器权限</p>
+<p>Tomcat服务默认是以system权限运行的，因此该jsp木马就继承了其权限，几乎可以对Web服务器进行所有的操作。<br><img src="http://static.wooyun.org//drops/20150909/2015090908440219147.png" alt=""><br>然后创建用户: net user Boom shellcode /add</p>
+<p>添加到管理员用户组: net localgroup administrators Boom /add<br><img src="http://static.wooyun.org//drops/20150909/2015090908440298603.png" alt=""><br>然后可以干什么事我就不说了</p>
+<h2 id="0x03_安全配置">0x03 安全配置</h2><p>一.修改tomacat-users.xml或删除Tomcat后台</p>
+<p>修改\conf\tomacat-users.xml<br><img src="http://static.wooyun.org//drops/20150909/2015090908440273000.png" alt=""></p>
+<p>删除Tomcat后台 \webapps全部删除就好。</p>
+<p>二.禁止列目录</p>
+<p>在IIS中如果设置不当，就会列出Web当前目录中的所有文件，然而在Tomcat也不例外。如果浏览者可以在客户端浏览Web目录，那将会存在较大的安全隐患，因此我们要确认Tomcat的设置中禁止列目录。\conf\web.xml下</p>
+<p><init-param></init-param></p>
+<p><param-name>listings</param-name></p>
+<p><param-value>false</param-value><br>　　<br>确认是false而不是true。</p>
+<p><img src="http://static.wooyun.org//drops/20150909/2015090908440329796.png" alt=""></p>
+<p>三.服务降权</p>
+<p>默认安装时Tomcat是以系统服务权限运行的，因此缺省情况下几乎所有的Web服务器的管理员都具有Administrator权限，存在极大的安全隐患，所以我们的安全设置首先从Tomcat服务降权开始。</p>
+<p>首先创建一个普通用户，为其设置密码，将其密码策略设置为“密码永不过期”，比如我们创建的用户为tomcat。然后修改tomcat安装文件夹的访问权限，为tomcat赋予Tomcat文件夹的读、写、执行的访问权限，赋予Tomcat对WebApps文件夹的只读访问权限，如果某些Web应用程序需要写访问权限，单独为其授予对那个文件夹的写访问权限。</p>
+<p><img src="http://static.wooyun.org//drops/20150909/2015090908440328686.png" alt=""></p>
+<p>“开始→运行”，输入services.msc打开服务管理器，找到Apache Tomcat服务，双击打开该服务的属性，在其实属性窗口中点击“登录”选项卡，在登录身份下选中“以此帐户”，然后在文本框中输入tomcat和密码，最后“确定”并重启服务器。这样tomcat就以tomcat这个普通用户的权限运行。</p>
+<p><img src="http://static.wooyun.org//drops/20150909/2015090908440373699.png" alt=""></p>
+<p>然后重启服务,就生效了。这样普通用户tomcat运行的Tomcat其权限就大大地降低了，就算是攻击者获得了Webshell也不能进一步深入，从而威胁web服务器的安全。</p>
+<p>四.关闭war自动部署</p>
+<p>关闭war自动部署 unpackWARs=”false” autoDeploy=”false”。防止被植入木马等恶意程序</p>
+<p>应用程序部署与tomcat启动,不能使用同一个用户。</p>
+<p><img src="http://static.wooyun.org//drops/20150909/2015090908440348885.png" alt=""></p>
+<p><strong>注：此文章获得乌云drops授权转载，©乌云知识库版权所有 未经许可 禁止转载</strong><br><strong>文章来源：</strong><br><a href="http://drops.wooyun.org/%E8%BF%90%E7%BB%B4%E5%AE%89%E5%85%A8/8519" target="_blank" rel="external">http://drops.wooyun.org/%E8%BF%90%E7%BB%B4%E5%AE%89%E5%85%A8/8519</a></p>
+
       
     </div>
 
     <div>
       
+        
+      
     </div>
 
     <footer class="post-footer">
       
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2015/09/23/producerconsumer/" itemprop="url">
-                  Java基于queue的多线程模拟生产者消费者问题
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-09-23T15:30:00+08:00" content="2015-09-23">
-              2015-09-23
-            </time>
-          </span>
-
+        <div class="post-tags">
           
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/编程开发/" itemprop="url" rel="index">
-                    <span itemprop="name">编程开发</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
+            <a href="/tags/Windows/" rel="tag">#Windows</a>
           
-
+            <a href="/tags/tomcat/" rel="tag">#tomcat</a>
           
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2015/09/23/producerconsumer/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/09/23/producerconsumer/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
+            <a href="/tags/加固/" rel="tag">#加固</a>
           
-
+            <a href="/tags/服务器/" rel="tag">#服务器</a>
           
-
-          
-          
-             <span id="/2015/09/23/producerconsumer/" class="leancloud_visitors" data-flag-title="Java基于queue的多线程模拟生产者消费者问题">
-               &nbsp; | &nbsp;
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               <span class="post-meta-item-text">阅读次数 </span>
-               <span class="leancloud-visitors-count"></span>
-              </span>
-          
-
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          <h2 id="0x01_并发协作（生产者消费者模型）">0x01 并发协作（生产者消费者模型）</h2><p>对于多线程程序来说，不管任何编程语言，生产者和消费者模型都是最经典的。就像学习每一门编程语言你首先要输出Hello World一样，都是经典的例子。<br>生产者消费者模型准确的讲应该是”生产者-消费者-仓储”模型，离开了仓储这个介质，生产者和消费者也就没有了必然的联系。<br>这里使用queue队列作为仓储，将生产者和消费者联系起来并模拟实现一个简单的多线程并发协作的模型<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/6.JPG" alt=""><br>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2015/09/23/producerconsumer/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/05/31/sql7/" rel="next" title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇">
+                <i class="fa fa-chevron-left"></i> 【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇
+              </a>
+            
           </div>
-        
-      
-    </div>
 
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
+          <div class="post-nav-prev post-nav-item">
             
+              <a href="/2016/06/17/Linux下tomcat安全配置/" rel="prev" title="Linux下tomcat安全配置">
+                Linux下tomcat安全配置 <i class="fa fa-chevron-right"></i>
+              </a>
             
-              
-                
-                <a class="post-title-link" href="/2015/07/09/fckeditor/" itemprop="url">
-                  FCKeditor上传漏洞总结
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2015-07-09T10:39:50+08:00" content="2015-07-09">
-              2015-07-09
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
-                    <span itemprop="name">WEB安全</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2015/07/09/fckeditor/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/07/09/fckeditor/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-             <span id="/2015/07/09/fckeditor/" class="leancloud_visitors" data-flag-title="FCKeditor上传漏洞总结">
-               &nbsp; | &nbsp;
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               <span class="post-meta-item-text">阅读次数 </span>
-               <span class="leancloud-visitors-count"></span>
-              </span>
-          
-
+          </div>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          <h2 id="0x01_FCKeditor简介">0x01 FCKeditor简介</h2><p>FCKeditor是一个专门使用在网页上属于开放源代码的所见即所得文字编辑器。它志于轻量化，不需要太复杂的安装步骤即可使用。它可和PHP、 JavaScript、ASP、ASP.NET、ColdFusion、Java、以及ABAP等不同的编程语言相结合。“FCKeditor”名称中的 “FCK” 是这个编辑器的作者的名字Frederico Caldeira Knabben的缩写。FCKeditor 相容于绝大部分的网页浏览器，像是 : Internet Explorer 5.5+ (Windows)、Mozilla Firefox 1.0+、Mozilla 1.3+ 和 Netscape 7+。在未来的版本也将会加入对 Opera 的支援。<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/f.jpg" alt=""><br>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2015/07/09/fckeditor/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </article>
 
 
-    
-  </section>
 
-  
-  <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/2/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span>
-  </nav>
-
+    <div class="post-spread">
+      
+    </div>
+  </div>
 
 
           </div>
@@ -623,6 +435,14 @@
 
 
           
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/06/17/tomcat安全配置/"
+           data-title="Windows下tomcat安全配置" data-url="http://www.cnbraid.com/2016/06/17/tomcat安全配置/">
+      </div>
+    
+  </div>
+
 
         </div>
         
@@ -642,8 +462,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+      <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/uploads/avatar.jpg"
@@ -744,6 +573,17 @@
       </section>
 
       
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#0x00_Tomcat简介"><span class="nav-number">1.</span> <span class="nav-text">0x00 Tomcat简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x01_测试环境"><span class="nav-number">2.</span> <span class="nav-text">0x01 测试环境</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x02_安全验证"><span class="nav-number">3.</span> <span class="nav-text">0x02 安全验证</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#0x03_安全配置"><span class="nav-number">4.</span> <span class="nav-text">0x03 安全配置</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
 
     </div>
   </aside>
@@ -829,6 +669,11 @@
 
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/vendors/jquery-scrollintoview/jquery.scrollintoview.min.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
 
   
 

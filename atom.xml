@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-06-07T01:32:26.988Z</updated>
+  <updated>2016-06-17T04:50:30.299Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -14,6 +14,135 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Linux下tomcat安全配置</title>
+    <link href="http://www.cnbraid.com/2016/06/17/Linux%E4%B8%8Btomcat%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE/"/>
+    <id>http://www.cnbraid.com/2016/06/17/Linux下tomcat安全配置/</id>
+    <published>2016-06-17T06:39:50.000Z</published>
+    <updated>2016-06-17T04:50:30.299Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x00_删除默认目录&quot;&gt;0x00 删除默认目录&lt;/h2&gt;&lt;p&gt;安装完tomcat后，删除$CATALINA_HOME/webapps下默认的所有目录文件&lt;/p&gt;
+&lt;figure class=&quot;highlight gradle&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;rm -rf &lt;span class=&quot;regexp&quot;&gt;/srv/&lt;/span&gt;apache-tomcat&lt;span class=&quot;regexp&quot;&gt;/webapps/&lt;/span&gt;*&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;
+&lt;h2 id=&quot;0x01_用户管理&quot;&gt;0x01 用户管理&lt;/h2&gt;&lt;p&gt;如果不需要通过web部署应用，建议注释或删除tomcat-users.xml下用户权限相关配置&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416373714302117.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_隐藏tomcat版本信息&quot;&gt;0x02 隐藏tomcat版本信息&lt;/h2&gt;&lt;p&gt;方法一&lt;/p&gt;
+&lt;p&gt;修改$CATALINA_HOME/conf/server.xml,在Connector节点添加server字段，示例如下&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637392245625.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637411365536.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;方法二&lt;/p&gt;
+&lt;p&gt;修改$CATALINA_HOME/lib/catalina.jar::org/apache/catalina/util/ServerInfo.properties&lt;/p&gt;
+&lt;p&gt;默认情况下如图&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637426629645.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637448444455.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;用户可自定义修改server.info字段和server.number字段，示例修改如下图所示。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637456906065.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637477579375.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_关闭自动部署&quot;&gt;0x03 关闭自动部署&lt;/h2&gt;&lt;p&gt;如果不需要自动部署，建议关闭自动部署功能。在$CATALINA_HOME/conf/server.xml中的host字段，修改unpackWARs=”false” autoDeploy=”false”。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637481537685.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x04_自定义错误页面&quot;&gt;0x04 自定义错误页面&lt;/h2&gt;&lt;p&gt;修改web.xml,自定义40x、50x等容错页面，防止信息泄露。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/201605241637504858695.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x05_禁止列目录（高版本默认已禁止）&quot;&gt;0x05 禁止列目录（高版本默认已禁止）&lt;/h2&gt;&lt;p&gt;修改web.xml&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416375139392105.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x06_AJP端口管理&quot;&gt;0x06 AJP端口管理&lt;/h2&gt;&lt;p&gt;AJP是为 Tomcat 与 HTTP 服务器之间通信而定制的协议，能提供较高的通信速度和效率。如果tomcat前端放的是apache的时候，会使用到AJP这个连接器。前端如果是由nginx做的反向代理的话可以不使用此连接器，因此需要注销掉该连接器。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416375323093118.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x07_服务权限控制&quot;&gt;0x07 服务权限控制&lt;/h2&gt;&lt;p&gt;tomcat以非root权限启动，应用部署目录权限和tomcat服务启动用户分离，比如tomcat以tomcat用户启动，而部署应用的目录设置为nobody用户750。&lt;/p&gt;
+&lt;h2 id=&quot;0x08_启用cookie的HttpOnly属性&quot;&gt;0x08 启用cookie的HttpOnly属性&lt;/h2&gt;&lt;p&gt;修改$CATALINA_HOME/conf/context.xml，添加&lt;context usehttponly=&quot;true&quot;&gt;,如下图所示&lt;/context&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416375437308125.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;测试结果&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416375527932134.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416375763846144.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;配置cookie的secure属性，在web.xml中sesion-config节点配置cooker-config，此配置只允许cookie在加密方式下传输。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416375941520153.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;测试结果&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20160524/2016052416380093567163.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;注：此文章获得乌云drops授权转载，©乌云知识库版权所有 未经许可 禁止转载&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;文章来源：&lt;/strong&gt;&lt;br&gt;&lt;a href=&quot;http://drops.wooyun.org/%E8%BF%90%E7%BB%B4%E5%AE%89%E5%85%A8/15888&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://drops.wooyun.org/%E8%BF%90%E7%BB%B4%E5%AE%89%E5%85%A8/15888&lt;/a&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x00_删除默认目录&quot;&gt;0x00 删除默认目录&lt;/h2&gt;&lt;p&gt;安装完tomcat后，删除$CATALINA_HOME/webapps下默认的所有目录文件&lt;/p&gt;
+&lt;figure class=&quot;highlight gradle&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;rm -rf &lt;span class=&quot;regexp&quot;&gt;/srv/&lt;/span&gt;apache-tomcat&lt;span class=&quot;regexp&quot;&gt;/webapps/&lt;/span&gt;*&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
+    
+    </summary>
+    
+      <category term="安全加固" scheme="http://www.cnbraid.com/categories/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA/"/>
+    
+    
+      <category term="Linux" scheme="http://www.cnbraid.com/tags/Linux/"/>
+    
+      <category term="tomcat" scheme="http://www.cnbraid.com/tags/tomcat/"/>
+    
+      <category term="加固" scheme="http://www.cnbraid.com/tags/%E5%8A%A0%E5%9B%BA/"/>
+    
+      <category term="服务器" scheme="http://www.cnbraid.com/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Windows下tomcat安全配置</title>
+    <link href="http://www.cnbraid.com/2016/06/17/tomcat%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE/"/>
+    <id>http://www.cnbraid.com/2016/06/17/tomcat安全配置/</id>
+    <published>2016-06-17T02:39:50.000Z</published>
+    <updated>2016-06-17T04:41:19.102Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x00_Tomcat简介&quot;&gt;0x00 Tomcat简介&lt;/h2&gt;&lt;p&gt;tomcat是一个开源Web服务器，基于Tomcat的Web运行效率高，可以在一般的硬件平台上流畅运行，因此，颇受Web站长的青睐。不过，在默认配置下其存在一定的安全隐患，可被恶意攻击。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x01_测试环境&quot;&gt;0x01 测试环境&lt;/h2&gt;&lt;p&gt;Win2003&lt;br&gt;Tomcat6.0.18 安装版&lt;/p&gt;
+&lt;h2 id=&quot;0x02_安全验证&quot;&gt;0x02 安全验证&lt;/h2&gt;&lt;p&gt;一.登陆后台&lt;/p&gt;
+&lt;p&gt;首先在win2003上部署Tomcat,一切保持默认。&lt;/p&gt;
+&lt;p&gt;Tomcat的默认后台地址为:&lt;a href=&quot;http://域名:端口/manager/html.进入之后弹出登陆对话框,Tomcat默认的用户名admin,密码为空。&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://域名:端口/manager/html.进入之后弹出登陆对话框,Tomcat默认的用户名admin,密码为空。&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Tomcat的一些弱口令:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;tomcat tomcat&lt;br&gt;admin 空&lt;br&gt;admin admin&lt;br&gt;admin 123456&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440190493.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;然后来看一下Tomcat安装版默认的tomacat-users.xml配置文件&lt;br&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440294106.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;注：Linux平台及Windows平台免安装版本不受该漏洞影响。&lt;/p&gt;
+&lt;p&gt;二.获取Webshell&lt;/p&gt;
+&lt;p&gt;在Tomcat的后台有个WAR file to deploy模块，通过其可以上传WAR文件。Tomcat可以解析WAR文件，能够将其解压并生成web文件。&lt;br&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440250032.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;我们将一个jsp格式的webshell用WinRar打包然后将其后缀改名为WAR(本例为no.war)，这样;一个WAR包就生成了。最后将其上传到服务器，可以看到在Tomcat的后台中多了一个名为/no的目录。&lt;br&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440248016.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;点击该目录打开该目录jsp木马就运行了，这样就获得了一个Webshell。&lt;br&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440279290.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;三.获取服务器权限&lt;/p&gt;
+&lt;p&gt;Tomcat服务默认是以system权限运行的，因此该jsp木马就继承了其权限，几乎可以对Web服务器进行所有的操作。&lt;br&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440219147.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;然后创建用户: net user Boom shellcode /add&lt;/p&gt;
+&lt;p&gt;添加到管理员用户组: net localgroup administrators Boom /add&lt;br&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440298603.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;然后可以干什么事我就不说了&lt;/p&gt;
+&lt;h2 id=&quot;0x03_安全配置&quot;&gt;0x03 安全配置&lt;/h2&gt;&lt;p&gt;一.修改tomacat-users.xml或删除Tomcat后台&lt;/p&gt;
+&lt;p&gt;修改\conf\tomacat-users.xml&lt;br&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440273000.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;删除Tomcat后台 \webapps全部删除就好。&lt;/p&gt;
+&lt;p&gt;二.禁止列目录&lt;/p&gt;
+&lt;p&gt;在IIS中如果设置不当，就会列出Web当前目录中的所有文件，然而在Tomcat也不例外。如果浏览者可以在客户端浏览Web目录，那将会存在较大的安全隐患，因此我们要确认Tomcat的设置中禁止列目录。\conf\web.xml下&lt;/p&gt;
+&lt;p&gt;&lt;init-param&gt;&lt;/init-param&gt;&lt;/p&gt;
+&lt;p&gt;&lt;param-name&gt;listings&lt;/param-name&gt;&lt;/p&gt;
+&lt;p&gt;&lt;param-value&gt;false&lt;/param-value&gt;&lt;br&gt;　　&lt;br&gt;确认是false而不是true。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440329796.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;三.服务降权&lt;/p&gt;
+&lt;p&gt;默认安装时Tomcat是以系统服务权限运行的，因此缺省情况下几乎所有的Web服务器的管理员都具有Administrator权限，存在极大的安全隐患，所以我们的安全设置首先从Tomcat服务降权开始。&lt;/p&gt;
+&lt;p&gt;首先创建一个普通用户，为其设置密码，将其密码策略设置为“密码永不过期”，比如我们创建的用户为tomcat。然后修改tomcat安装文件夹的访问权限，为tomcat赋予Tomcat文件夹的读、写、执行的访问权限，赋予Tomcat对WebApps文件夹的只读访问权限，如果某些Web应用程序需要写访问权限，单独为其授予对那个文件夹的写访问权限。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440328686.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;“开始→运行”，输入services.msc打开服务管理器，找到Apache Tomcat服务，双击打开该服务的属性，在其实属性窗口中点击“登录”选项卡，在登录身份下选中“以此帐户”，然后在文本框中输入tomcat和密码，最后“确定”并重启服务器。这样tomcat就以tomcat这个普通用户的权限运行。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440373699.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;然后重启服务,就生效了。这样普通用户tomcat运行的Tomcat其权限就大大地降低了，就算是攻击者获得了Webshell也不能进一步深入，从而威胁web服务器的安全。&lt;/p&gt;
+&lt;p&gt;四.关闭war自动部署&lt;/p&gt;
+&lt;p&gt;关闭war自动部署 unpackWARs=”false” autoDeploy=”false”。防止被植入木马等恶意程序&lt;/p&gt;
+&lt;p&gt;应用程序部署与tomcat启动,不能使用同一个用户。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;http://static.wooyun.org//drops/20150909/2015090908440348885.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;注：此文章获得乌云drops授权转载，©乌云知识库版权所有 未经许可 禁止转载&lt;/strong&gt;&lt;br&gt;&lt;strong&gt;文章来源：&lt;/strong&gt;&lt;br&gt;&lt;a href=&quot;http://drops.wooyun.org/%E8%BF%90%E7%BB%B4%E5%AE%89%E5%85%A8/8519&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://drops.wooyun.org/%E8%BF%90%E7%BB%B4%E5%AE%89%E5%85%A8/8519&lt;/a&gt;&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x00_Tomcat简介&quot;&gt;0x00 Tomcat简介&lt;/h2&gt;&lt;p&gt;tomcat是一个开源Web服务器，基于Tomcat的Web运行效率高，可以在一般的硬件平台上流畅运行，因此，颇受Web站长的青睐。不过，在默认配置下其存在一定的安全隐患，可被恶意攻击。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="安全加固" scheme="http://www.cnbraid.com/categories/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA/"/>
+    
+    
+      <category term="Windows" scheme="http://www.cnbraid.com/tags/Windows/"/>
+    
+      <category term="tomcat" scheme="http://www.cnbraid.com/tags/tomcat/"/>
+    
+      <category term="加固" scheme="http://www.cnbraid.com/tags/%E5%8A%A0%E5%9B%BA/"/>
+    
+      <category term="服务器" scheme="http://www.cnbraid.com/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/"/>
+    
+  </entry>
   
   <entry>
     <title>【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇</title>
