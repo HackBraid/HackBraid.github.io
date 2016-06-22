@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-06-17T04:50:30.299Z</updated>
+  <updated>2016-06-22T07:24:24.412Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -14,6 +14,70 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>sqlmap基础</title>
+    <link href="http://www.cnbraid.com/2016/06/22/sqlmap%E5%9F%BA%E7%A1%80/"/>
+    <id>http://www.cnbraid.com/2016/06/22/sqlmap基础/</id>
+    <published>2016-06-22T02:39:50.000Z</published>
+    <updated>2016-06-22T07:24:24.412Z</updated>
+    
+    <content type="html">&lt;h2 id=&quot;0x01_sqlmap简介&quot;&gt;0x01 sqlmap简介&lt;/h2&gt;&lt;p&gt;SQLMAP是一个开源的渗透测试工具，它主要用于自动化地侦测和实施SQL注入攻击以及渗透数据库服务器。SQLMAP配有强大的侦测引擎，适用于高级渗透测试用户，不仅可以获得不同数据库的指纹信息，还可以从数据库中提取数据，此外还能够处理潜在的文件系统以及通过数据连接执行系统命令等，所以SQLMAP是渗透测试者必备的一项工具，而这篇分享正式对sqlmap基础用法和一些深入的高级用法进行讲解。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmaplogo.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x02_一个案例&quot;&gt;0x02 一个案例&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;&lt;br&gt;当给sqlmap这么一个url的时候，它会做如下工作（功能）：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;1、识别出哪种数据库&lt;br&gt;2、判断可注入的参数&lt;br&gt;3、判断可以用那种SQL注入技术来注入&lt;br&gt;4、根据用户选择，读取哪些数据&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;我们打开sqlmap跑一下上面这个url，首先他识别出来是MySQL数据库如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap0.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;识别可注入的参数，这里就是参数id如下：&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap2.jpg&quot; alt=&quot;&quot;&gt;&lt;br&gt;判断那种SQL注入技术来进行注入，如下图，id这个注入点支持布尔型盲注、报错注入、基于时间的盲注和联合查询注入这四种类型&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap3.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;获取数据库用户名&quot;&gt;获取数据库用户名&lt;/h3&gt;&lt;p&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ —current-user&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap4.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;获取当前的数据库&quot;&gt;获取当前的数据库&lt;/h3&gt;&lt;p&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ —current-db&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap5.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;获取当前数据库中所有的表&quot;&gt;获取当前数据库中所有的表&lt;/h3&gt;&lt;p&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ -D test —tables&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap6.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;获取当前数据库中某个表的表结构&quot;&gt;获取当前数据库中某个表的表结构&lt;/h3&gt;&lt;p&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ -D test -T admin —columns&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap7.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;Dump数据（脱裤）&quot;&gt;Dump数据（脱裤）&lt;/h3&gt;&lt;p&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ -D test -T admin -C name,pass —dump&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap8.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x03_必背的知识一检测端&quot;&gt;0x03 必背的知识一检测端&lt;/h2&gt;&lt;h3 id=&quot;检测POST请求中的参数&quot;&gt;检测POST请求中的参数&lt;/h3&gt;&lt;p&gt;参数：—data&lt;br&gt;此参数是把数据以POST方式提交，sqlmap会像检测GET参数一样检测POST的参数。&lt;br&gt;例子：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php&lt;/a&gt;“ —data=”id=1”&lt;/p&gt;
+&lt;h3 id=&quot;检测COOKIE请求中的参数&quot;&gt;检测COOKIE请求中的参数&lt;/h3&gt;&lt;p&gt;参数：—cookie,—load-cookies,—drop-set-cookie&lt;br&gt;这个参数在以下两个方面很有用：&lt;br&gt;1、注入点是需要登陆后才可以注入的时候。&lt;br&gt;2、需要测试cookie里参数的注入时。&lt;br&gt;可以通过抓包把cookie获取到，复制出来，然后加到—cookie参数里。&lt;br&gt;例子：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ —cookie=”sessionid=7f658c3b91d10ae”&lt;br&gt;当设置—level的参数设定为2或者2以上的时候，sqlmap会尝试注入Cookie参数。&lt;br&gt;PS：还可以设置HTTP User-Agent头、Referer头或者额外的HTTP头并进行相应的头部注入，自行查询。&lt;/p&gt;
+&lt;h3 id=&quot;指定测试参数&quot;&gt;指定测试参数&lt;/h3&gt;&lt;p&gt;参数：-p,—skip&lt;br&gt;sqlmap默认测试所有的GET和POST参数，但是你可以手动用-p参数设置想要测试的参数。例如： -p “id,user-anget”&lt;br&gt;当你使用—level的值很大但是有个别参数不想测试的时候可以使用—skip参数。&lt;br&gt;例如：—skip=”user-angent.referer”&lt;br&gt;在有些时候web服务器使用了URL重写，导致无法直接使用sqlmap测试参数，可以在想测试的参数后面加&lt;em&gt;&lt;br&gt;例如：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://targeturl/param1/value1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://targeturl/param1/value1&lt;/a&gt;&lt;/em&gt;/param2/value2/“&lt;br&gt;sqlmap将会测试value1的位置是否可注入。&lt;br&gt;指定数据库**&lt;br&gt;参数：—dbms&lt;br&gt;默认情况系sqlmap会自动的探测web应用后端的数据库是什么，sqlmap支持的数据库有：&lt;br&gt;MySQL、Oracle、PostgreSQL、Microsoft SQL Server、Microsoft Access、SQLite、Firebird、Sybase、SAP MaxDB、DB2&lt;/p&gt;
+&lt;h3 id=&quot;注入payload&quot;&gt;注入payload&lt;/h3&gt;&lt;p&gt;参数：—prefix,—suffix&lt;br&gt;在有些环境中，需要在注入的payload的前面或者后面加一些字符，来保证payload的正常执行。&lt;br&gt;例如，代码中是这样调用数据库的：&lt;br&gt;$query = “SELECT &lt;em&gt; FROM users WHERE id=(’” . $_GET[’id’] . “’) LIMIT 0, 1”;&lt;br&gt;这时你就需要—prefix和—suffix参数了：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://targeturl/sqlmap/mysql/get_str_brackets.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://targeturl/sqlmap/mysql/get_str_brackets.php?id=1&lt;/a&gt;“ -p id —prefix “’)” —suffix “AND (’abc’=’abc”&lt;br&gt;这样执行的SQL语句变成：&lt;br&gt;$query = “SELECT &lt;/em&gt; FROM users WHERE id=(’1’) &lt;payload&gt; AND (’abc’=’abc’) LIMIT 0, 1”; &lt;/payload&gt;&lt;/p&gt;
+&lt;h3 id=&quot;指定数据库服务器系统&quot;&gt;指定数据库服务器系统&lt;/h3&gt;&lt;p&gt;参数：—os&lt;br&gt;默认情况下sqlmap会自动的探测数据库服务器系统，支持的系统有：Linux、Windows。&lt;/p&gt;
+&lt;h3 id=&quot;指定sqlmap的探测技术&quot;&gt;指定sqlmap的探测技术&lt;/h3&gt;&lt;p&gt;参数：—technique&lt;br&gt;这个参数可以指定sqlmap使用的探测技术，默认情况下会测试所有的方式。&lt;br&gt;支持的探测方式如下：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;B: Boolean-based blind SQL injection（布尔型注入）&lt;br&gt;E: Error-based SQL injection（报错型注入）&lt;br&gt;U: UNION query SQL injection（可联合查询注入）&lt;br&gt;S: Stacked queries SQL injection（可多语句查询注入）&lt;br&gt;T: Time-based blind SQL injection（基于时间延迟注入）&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&quot;设定延迟注入的时间&quot;&gt;设定延迟注入的时间&lt;/h3&gt;&lt;p&gt;参数：—time-sec&lt;br&gt;当使用继续时间的盲注时，时刻使用—time-sec参数设定延时时间，默认是5秒。&lt;/p&gt;
+&lt;h3 id=&quot;探测等级&quot;&gt;探测等级&lt;/h3&gt;&lt;p&gt;参数：—level&lt;br&gt;共有五个等级，默认为1，sqlmap使用的payload可以在xml/payloads.xml中看到，你也可以根据相应的格式添加自己的payload。&lt;br&gt;这个参数不仅影响使用哪些payload同时也会影响测试的注入点，GET和POST的数据都会测试，HTTP Cookie在level为2的时候就会测试，HTTP User-Agent/Referer头在level为3的时候就会测试。&lt;br&gt;总之在你不确定哪个payload或者参数为注入点的时候，为了保证全面性，建议使用高的level值。&lt;/p&gt;
+&lt;h3 id=&quot;风险等级&quot;&gt;风险等级&lt;/h3&gt;&lt;p&gt;参数：—risk&lt;br&gt;共有四个风险等级，默认是1会测试大部分的测试语句，2会增加基于事件的测试语句，3会增加OR语句的SQL注入测试。&lt;br&gt;在有些时候，例如在UPDATE的语句中，注入一个OR的测试语句，可能导致更新的整个表，可能造成很大的风险。&lt;br&gt;测试的语句同样可以在xml/payloads.xml中找到，你也可以自行添加payload。&lt;/p&gt;
+&lt;h2 id=&quot;0x04_必背的知识一数据端&quot;&gt;0x04 必背的知识一数据端&lt;/h2&gt;&lt;h3 id=&quot;当前用户&quot;&gt;当前用户&lt;/h3&gt;&lt;p&gt;参数：-current-user&lt;br&gt;在大多数据库中可以获取到管理数据的用户。&lt;/p&gt;
+&lt;h3 id=&quot;当前数据库&quot;&gt;当前数据库&lt;/h3&gt;&lt;p&gt;参数：—current-db&lt;br&gt;返还当前连接的数据库。&lt;/p&gt;
+&lt;h3 id=&quot;当前用户是否为管理&quot;&gt;当前用户是否为管理&lt;/h3&gt;&lt;p&gt;参数：—is-dba&lt;br&gt;判断当前的用户是否为管理，是的话会返回True。&lt;/p&gt;
+&lt;h3 id=&quot;列数据库管理的用户&quot;&gt;列数据库管理的用户&lt;/h3&gt;&lt;p&gt;参数：—users&lt;br&gt;当前用户有权限读取包含所有用户的表的权限时，就可以列出所有管理用户。&lt;/p&gt;
+&lt;h3 id=&quot;列出并破解数据库用户的hash&quot;&gt;列出并破解数据库用户的hash&lt;/h3&gt;&lt;p&gt;参数：—passwords&lt;br&gt;当前用户有权限读取包含用户密码的彪的权限时，sqlmap会现列举出用户，然后列出hash，并尝试破解。&lt;br&gt;例子：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt; —passwords -v 1”&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap9.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;列出数据库管理员权限&quot;&gt;列出数据库管理员权限&lt;/h3&gt;&lt;p&gt;参数：—privileges&lt;br&gt;当前用户有权限读取包含所有用户的表的权限时，很可能列举出每个用户的权限，sqlmap将会告诉你哪个是数据库的超级管理员。也可以用-U参数指定你想看哪个用户的权限。&lt;/p&gt;
+&lt;h3 id=&quot;列出数据库管理员角色&quot;&gt;列出数据库管理员角色&lt;/h3&gt;&lt;p&gt;参数：—roles&lt;br&gt;当前用户有权限读取包含所有用户的表的权限时，很可能列举出每个用户的角色，也可以用-U参数指定你想看哪个用户的角色。&lt;br&gt;仅适用于当前数据库是Oracle的时候。&lt;/p&gt;
+&lt;h3 id=&quot;列出数据库系统的数据库&quot;&gt;列出数据库系统的数据库&lt;/h3&gt;&lt;p&gt;参数：—dbs&lt;br&gt;当前用户有权限读取包含所有数据库列表信息的表中的时候，即可列出所有的数据库。&lt;/p&gt;
+&lt;h3 id=&quot;列举数据库表&quot;&gt;列举数据库表&lt;/h3&gt;&lt;p&gt;参数：—tables,—exclude-sysdbs,-D&lt;br&gt;当前用户有权限读取包含所有数据库表信息的表中的时候，即可列出一个特定数据的所有表。&lt;br&gt;如果你不提供-D参数来列指定的一个数据的时候，sqlmap会列出数据库所有库的所有表。&lt;br&gt;—exclude-sysdbs参数是指包含了所有的系统数据库。&lt;br&gt;需要注意的是在Oracle中你需要提供的是TABLESPACE_NAME而不是数据库名称。&lt;/p&gt;
+&lt;h3 id=&quot;列举数据库表中的字段&quot;&gt;列举数据库表中的字段&lt;/h3&gt;&lt;p&gt;参数：—columns,-C,-T,-D&lt;br&gt;当前用户有权限读取包含所有数据库表信息的表中的时候，即可列出指定数据库表中的字段，同时也会列出字段的数据类型。&lt;br&gt;如果没有使用-D参数指定数据库时，默认会使用当前数据库。&lt;/p&gt;
+&lt;h3 id=&quot;获取表中数据个数&quot;&gt;获取表中数据个数&lt;/h3&gt;&lt;p&gt;参数：—count&lt;br&gt;有时候用户只想获取表中的数据个数而不是具体的内容，那么就可以使用这个参数。&lt;/p&gt;
+&lt;h3 id=&quot;运行自定义的SQL语句&quot;&gt;运行自定义的SQL语句&lt;/h3&gt;&lt;p&gt;参数：—sql-query,—sql-shell&lt;br&gt;sqlmap会自动检测确定使用哪种SQL注入技术，如何插入检索语句。&lt;br&gt;如果是SELECT查询语句，sqlap将会输出结果。如果是通过SQL注入执行其他语句，需要测试是否支持多语句执行SQL语句。&lt;br&gt;例子：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt; —sql-query”&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap10.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;0x05_必背的知识一文件操作&quot;&gt;0x05 必背的知识一文件操作&lt;/h2&gt;&lt;h3 id=&quot;读取文件&quot;&gt;读取文件&lt;/h3&gt;&lt;p&gt;参数：—file-read&lt;br&gt;当数据库为MySQL，PostgreSQL或Microsoft SQL Server，并且当前用户有权限使用特定的函数。读取的文件可以是文本也可以是二进制文件。&lt;/p&gt;
+&lt;h3 id=&quot;将本地的文件写入到web服务器&quot;&gt;将本地的文件写入到web服务器&lt;/h3&gt;&lt;p&gt;参数：—file-write,—file-dest&lt;br&gt;当数据库为MySQL，PostgreSQL或Microsoft SQL Server，并且当前用户有权限使用特定的函数。上传的文件可以是文本也可以是二进制文件。&lt;br&gt;例子：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ —file-write=”E:\1.txt” —file-dest=”D:\winsoftware\wamp\www\sqltest\shell.php”&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap11.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h3 id=&quot;运行任意操作系统命令&quot;&gt;运行任意操作系统命令&lt;/h3&gt;&lt;p&gt;参数：—os-cmd,—os-shell&lt;br&gt;当数据库为MySQL，PostgreSQL或Microsoft SQL Server，并且当前用户有权限使用特定的函数。&lt;br&gt;在MySQL、PostgreSQL，sqlmap上传一个二进制库，包含用户自定义的函数，sys_exec()和sys_eval()。&lt;br&gt;那么他创建的这两个函数可以执行系统命令。在Microsoft SQL Server，sqlmap将会使用xp_cmdshell存储过程，如果被禁（在Microsoft SQL Server 2005及以上版本默认禁制），sqlmap会重新启用它，如果不存在，会自动创建。&lt;br&gt;例子：&lt;br&gt;python sqlmap.py -u “&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;“ —os-shell&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmap12.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;主要参考：&lt;a href=&quot;http://drops.wooyun.org/tips/143&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://drops.wooyun.org/tips/143&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;本文由HackBraid整理总结，原文链接：&lt;a href=&quot;http://www.cnbraid.com/2016/06/22/sqlmap基础/&quot;&gt;http://www.cnbraid.com/2016/06/22/sqlmap基础/&lt;/a&gt;，如需转载请联系作者。&lt;/p&gt;
+</content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;0x01_sqlmap简介&quot;&gt;0x01 sqlmap简介&lt;/h2&gt;&lt;p&gt;SQLMAP是一个开源的渗透测试工具，它主要用于自动化地侦测和实施SQL注入攻击以及渗透数据库服务器。SQLMAP配有强大的侦测引擎，适用于高级渗透测试用户，不仅可以获得不同数据库的指纹信息，还可以从数据库中提取数据，此外还能够处理潜在的文件系统以及通过数据连接执行系统命令等，所以SQLMAP是渗透测试者必备的一项工具，而这篇分享正式对sqlmap基础用法和一些深入的高级用法进行讲解。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmaplogo.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="渗透测试利器" scheme="http://www.cnbraid.com/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%88%A9%E5%99%A8/"/>
+    
+    
+      <category term="sqlmap" scheme="http://www.cnbraid.com/tags/sqlmap/"/>
+    
+      <category term="工具" scheme="http://www.cnbraid.com/tags/%E5%B7%A5%E5%85%B7/"/>
+    
+  </entry>
   
   <entry>
     <title>Linux下tomcat安全配置</title>
