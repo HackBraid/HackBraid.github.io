@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.cnbraid.com/"/>
-  <updated>2016-06-22T07:24:24.412Z</updated>
+  <updated>2016-06-22T07:27:28.078Z</updated>
   <id>http://www.cnbraid.com/</id>
   
   <author>
@@ -17,10 +17,10 @@
   
   <entry>
     <title>sqlmap基础</title>
-    <link href="http://www.cnbraid.com/2016/06/22/sqlmap%E5%9F%BA%E7%A1%80/"/>
-    <id>http://www.cnbraid.com/2016/06/22/sqlmap基础/</id>
-    <published>2016-06-22T02:39:50.000Z</published>
-    <updated>2016-06-22T07:24:24.412Z</updated>
+    <link href="http://www.cnbraid.com/2016/06/20/sqlmap%E5%9F%BA%E7%A1%80/"/>
+    <id>http://www.cnbraid.com/2016/06/20/sqlmap基础/</id>
+    <published>2016-06-20T02:39:50.000Z</published>
+    <updated>2016-06-22T07:27:28.078Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x01_sqlmap简介&quot;&gt;0x01 sqlmap简介&lt;/h2&gt;&lt;p&gt;SQLMAP是一个开源的渗透测试工具，它主要用于自动化地侦测和实施SQL注入攻击以及渗透数据库服务器。SQLMAP配有强大的侦测引擎，适用于高级渗透测试用户，不仅可以获得不同数据库的指纹信息，还可以从数据库中提取数据，此外还能够处理潜在的文件系统以及通过数据连接执行系统命令等，所以SQLMAP是渗透测试者必备的一项工具，而这篇分享正式对sqlmap基础用法和一些深入的高级用法进行讲解。&lt;br&gt;&lt;img src=&quot;http://7xk8bu.com1.z0.glb.clouddn.com/sqlmaplogo.png&quot; alt=&quot;&quot;&gt;&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x02_一个案例&quot;&gt;0x02 一个案例&lt;/h2&gt;&lt;p&gt;&lt;a href=&quot;http://codeaudit.org/sqltest/news.php?id=1&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;http://codeaudit.org/sqltest/news.php?id=1&lt;/a&gt;&lt;br&gt;当给sqlmap这么一个url的时候，它会做如下工作（功能）：&lt;/p&gt;
