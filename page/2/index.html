@@ -252,132 +252,6 @@
             
               
                 
-                <a class="post-title-link" href="/2016/05/10/sql6/" itemprop="url">
-                  【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结上篇
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-10T10:35:00+08:00" content="2016-05-10">
-              2016-05-10
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
-                    <span itemprop="name">WEB安全</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/05/10/sql6/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/10/sql6/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-             <span id="/2016/05/10/sql6/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结上篇">
-               &nbsp; | &nbsp;
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               <span class="post-meta-item-text">阅读次数 </span>
-               <span class="leancloud-visitors-count"></span>
-              </span>
-          
-
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～<br><strong>盲点如下：</strong><br>①注入点类似id=1这种整型的参数就会完全无视GPC的过滤；<br>②注入点包含键值对的，那么这里只检测了value，对key的过滤就没有防护；<br>③有时候全局的过滤只过滤掉GET、POST和COOKIE，但是没过滤SERVER。<br>附常见的SERVER变量（具体含义自行百度）：QUERY_STRING,X_FORWARDED_FOR,CLIENT_IP,HTTP_HOST,ACCEPT_LANGUAGE<br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlmangdian1.jpg" alt=""><br>
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/05/10/sql6/#more" rel="contents">
-              阅读全文 &raquo;
-            </a>
-          </div>
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
                 <a class="post-title-link" href="/2016/04/29/sql5/" itemprop="url">
                   【PHP代码审计】 那些年我们一起挖掘SQL注入 - 6.全局防护Bypass之一些函数的错误使用
                 </a>
@@ -865,6 +739,132 @@
 
 
     
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2015/12/24/sql1/" itemprop="url">
+                  【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2015-12-24T10:35:00+08:00" content="2015-12-24">
+              2015-12-24
+            </time>
+          </span>
+
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
+                    <span itemprop="name">WEB安全</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2015/12/24/sql1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2015/12/24/sql1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+             <span id="/2015/12/24/sql1/" class="leancloud_visitors" data-flag-title="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 2.全局防护Bypass之UrlDecode">
+               &nbsp; | &nbsp;
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               <span class="post-meta-item-text">阅读次数 </span>
+               <span class="leancloud-visitors-count"></span>
+              </span>
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="0x01_背景">0x01 背景</h2><p>现在的WEB程序基本都有对SQL注入的全局过滤，像PHP开启了GPC或者在全局文件common.php上使用addslashes()函数对接收的参数进行过滤，尤其是单引号。遇到这种情况我们就需要找一些编码解码的函数来绕过全局防护，这篇文章讲urldecode()的情况，同样大牛请自觉绕道~<br><strong>漏洞来源于乌云：<a href="http://www.wooyun.org/bugs/wooyun-2014-050338">http://www.wooyun.org/bugs/wooyun-2014-050338</a></strong><br><img src="http://7xk8bu.com1.z0.glb.clouddn.com/sqlbypass1.jpg" alt=""><br>
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2015/12/24/sql1/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
   </section>
 
   
@@ -910,7 +910,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">15</span>
+              <span class="site-state-item-count">14</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -918,7 +918,7 @@
           
             <div class="site-state-item site-state-categories">
               <a href="/categories">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">4</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
