@@ -95,7 +95,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql5_03.png">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql05_3.png">
-<meta property="og:updated_time" content="2016-06-07T03:25:40.608Z">
+<meta property="og:updated_time" content="2016-06-24T08:55:05.114Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 7.全局防护盲点的总结上篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，比如最经典的整型参数传递，也即被带入数据库查询的参数是整型、数组中的key没过滤被带入了查询以及全局过滤了GET、POST但没过滤SERVER或COOKIE引发的注入。所以看似有全局防护，实则隐藏了很多“后门”～盲点如下：①注入">
@@ -282,8 +282,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
-                    <span itemprop="name">WEB安全</span>
+                  <a href="/categories/WEB应用漏洞/" itemprop="url" rel="index">
+                    <span itemprop="name">WEB应用漏洞</span>
                   </a>
                 </span>
 

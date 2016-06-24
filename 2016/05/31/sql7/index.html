@@ -93,7 +93,7 @@
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_01.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_02.jpg">
 <meta property="og:image" content="http://7xk8bu.com1.z0.glb.clouddn.com/sql6_03.jpg">
-<meta property="og:updated_time" content="2016-06-07T01:32:26.988Z">
+<meta property="og:updated_time" content="2016-06-24T08:55:10.707Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="【PHP代码审计】 那些年我们一起挖掘SQL注入 - 8.全局防护盲点的总结下篇">
 <meta name="twitter:description" content="0x01 背景现在的WEB应用对SQL注入的防护基本都是判断GPC是否开启，然后使用addlashes函数对单引号等特殊字符进行转义。但仅仅使用这样的防护是存在很多盲点的，接上篇http://www.cnbraid.com/2016/05/10/sql6/，这里介绍另外两种情况。盲点如下：①FILES注入，全局只转义掉GET、POST等传来的参数，遗漏了FILES；②变量覆盖，危险函数：extra">
@@ -280,8 +280,8 @@
               <span class="post-meta-item-text">分类于</span>
               
                 <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/WEB安全/" itemprop="url" rel="index">
-                    <span itemprop="name">WEB安全</span>
+                  <a href="/categories/WEB应用漏洞/" itemprop="url" rel="index">
+                    <span itemprop="name">WEB应用漏洞</span>
                   </a>
                 </span>
 
