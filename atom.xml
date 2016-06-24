@@ -84,7 +84,7 @@
     <link href="http://www.cnbraid.com/2016/06/17/Linux%E4%B8%8Btomcat%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE/"/>
     <id>http://www.cnbraid.com/2016/06/17/Linux下tomcat安全配置/</id>
     <published>2016-06-17T06:39:50.000Z</published>
-    <updated>2016-06-17T04:50:30.299Z</updated>
+    <updated>2016-06-24T08:59:02.283Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x00_删除默认目录&quot;&gt;0x00 删除默认目录&lt;/h2&gt;&lt;p&gt;安装完tomcat后，删除$CATALINA_HOME/webapps下默认的所有目录文件&lt;/p&gt;
 &lt;figure class=&quot;highlight gradle&quot;&gt;&lt;table&gt;&lt;tr&gt;&lt;td class=&quot;code&quot;&gt;&lt;pre&gt;&lt;span class=&quot;line&quot;&gt;rm -rf &lt;span class=&quot;regexp&quot;&gt;/srv/&lt;/span&gt;apache-tomcat&lt;span class=&quot;regexp&quot;&gt;/webapps/&lt;/span&gt;*&lt;/span&gt;&lt;br&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/figure&gt;
@@ -131,7 +131,7 @@
     
     </summary>
     
-      <category term="安全加固" scheme="http://www.cnbraid.com/categories/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA/"/>
+      <category term="系统加固" scheme="http://www.cnbraid.com/categories/%E7%B3%BB%E7%BB%9F%E5%8A%A0%E5%9B%BA/"/>
     
     
       <category term="Linux" scheme="http://www.cnbraid.com/tags/Linux/"/>
@@ -149,7 +149,7 @@
     <link href="http://www.cnbraid.com/2016/06/17/tomcat%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE/"/>
     <id>http://www.cnbraid.com/2016/06/17/tomcat安全配置/</id>
     <published>2016-06-17T02:39:50.000Z</published>
-    <updated>2016-06-17T04:41:19.102Z</updated>
+    <updated>2016-06-24T08:58:55.443Z</updated>
     
     <content type="html">&lt;h2 id=&quot;0x00_Tomcat简介&quot;&gt;0x00 Tomcat简介&lt;/h2&gt;&lt;p&gt;tomcat是一个开源Web服务器，基于Tomcat的Web运行效率高，可以在一般的硬件平台上流畅运行，因此，颇受Web站长的青睐。不过，在默认配置下其存在一定的安全隐患，可被恶意攻击。&lt;br&gt;&lt;a id=&quot;more&quot;&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&quot;0x01_测试环境&quot;&gt;0x01 测试环境&lt;/h2&gt;&lt;p&gt;Win2003&lt;br&gt;Tomcat6.0.18 安装版&lt;/p&gt;
@@ -195,7 +195,7 @@
     
     </summary>
     
-      <category term="安全加固" scheme="http://www.cnbraid.com/categories/%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA/"/>
+      <category term="系统加固" scheme="http://www.cnbraid.com/categories/%E7%B3%BB%E7%BB%9F%E5%8A%A0%E5%9B%BA/"/>
     
     
       <category term="Windows" scheme="http://www.cnbraid.com/tags/Windows/"/>
